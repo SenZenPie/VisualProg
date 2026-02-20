@@ -84,11 +84,34 @@ function getFirstElement<T>(arr: T[]): T | undefined {
 
 const numbers = [10, 20, 30];
 const firstNum = getFirstElement(numbers);
+
 console.log(`Первое число: ${firstNum}`);
 
 const strings = ["TypeScript", "JavaScript", "Python"];
 const firstStr = getFirstElement(strings);
-console.log(`Первая строка: ${firstStr}`);
 
+console.log(`Первая строка: ${firstStr}`);
 console.log(`Пустой массив: ${getFirstElement([])}`);
 
+interface HasId {
+    id: number;
+}
+
+function findById<T extends HasId>(items: T[], id: number): T | undefined {
+    return items.find(item => item.id === id);
+}
+
+interface User extends HasId {
+    name: string;
+    isActive: boolean;
+}
+
+const users: User[] = [
+    { id: 1, name: "Один", isActive: true },
+    { id: 2, name: "Два", isActive: false },
+    { id: 3, name: "Три", isActive: true },
+    { id: 4, name: "Чотыре", isActive: false }
+];
+
+const user = findById(users, 4); 
+console.log(user?.name);

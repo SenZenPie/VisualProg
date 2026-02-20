@@ -63,3 +63,14 @@ var strings = ["TypeScript", "JavaScript", "Python"];
 var firstStr = getFirstElement(strings);
 console.log("\u041F\u0435\u0440\u0432\u0430\u044F \u0441\u0442\u0440\u043E\u043A\u0430: ".concat(firstStr));
 console.log("\u041F\u0443\u0441\u0442\u043E\u0439 \u043C\u0430\u0441\u0441\u0438\u0432: ".concat(getFirstElement([])));
+function findById(items, id) {
+    return items.find(function (item) { return item.id === id; });
+}
+var users = [
+    { id: 1, name: "Один", isActive: true },
+    { id: 2, name: "Два", isActive: false },
+    { id: 3, name: "Три", isActive: true },
+    { id: 4, name: "Чотыре", isActive: false }
+];
+var user = findById(users, 4);
+console.log(user === null || user === void 0 ? void 0 : user.name);
