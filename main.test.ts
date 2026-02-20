@@ -7,6 +7,7 @@ import {
   capitalize,
   trimAndFormat,
   getFirstElement,
+  findById
 } from './main';
 
 test('createUser создает пользователя', () => {
@@ -69,4 +70,23 @@ test('getFirstElement возвращает первый элемент масс�
 
 test('getFirstElement возвращает undefined для пустого массива', () => {
   expect(getFirstElement([])).toBeUndefined();
+});
+
+test('findById находит элемент по id', () => {
+  const items = [
+    { id: 1, name: 'A', isActive: true },
+    { id: 2, name: 'B', isActive: false }
+  ];
+
+  const result = findById(items, 2);
+
+  expect(result?.name).toBe('B');
+});
+
+test('findById возвращает undefined если не найдено', () => {
+  const items = [{ id: 1, name: 'A', isActive: true }];
+
+  const result = findById(items, 99);
+
+  expect(result).toBeUndefined();
 });
