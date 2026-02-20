@@ -37,3 +37,19 @@ function getStatusColor(status) {
             return '';
     }
 }
+var capitalize = function (str, uppercase) {
+    if (uppercase === void 0) { uppercase = false; }
+    if (str.length === 0)
+        return str;
+    var result = str.charAt(0).toUpperCase() + str.slice(1);
+    return uppercase ? result.toUpperCase() : result;
+};
+var trimAndFormat = function (str, uppercase) {
+    if (uppercase === void 0) { uppercase = false; }
+    var trimmed = str.trim();
+    return uppercase ? trimmed.toUpperCase() : trimmed;
+};
+console.log(capitalize("hello world!"));
+console.log(capitalize("hello world!", true));
+console.log(trimAndFormat("   hello!   "));
+console.log(trimAndFormat("   hello!   ", true));

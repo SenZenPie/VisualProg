@@ -60,3 +60,21 @@ function  getStatusColor(status: Status): string{
     }           
 }
 
+type StringFormatter = (str: string, uppercase?: boolean) => string;
+
+const capitalize: StringFormatter = (str, uppercase = false) => {
+    if (str.length === 0) return str;
+    const result = str.charAt(0).toUpperCase() + str.slice(1);
+    return uppercase ? result.toUpperCase() : result;
+};
+
+const trimAndFormat: StringFormatter = (str, uppercase = false) => {
+    const trimmed = str.trim();
+    return uppercase ? trimmed.toUpperCase() : trimmed;
+};
+
+console.log(capitalize("hello world!"));
+console.log(capitalize("hello world!", true));
+
+console.log(trimAndFormat("   hello!   "));
+console.log(trimAndFormat("   hello!   ", true));
