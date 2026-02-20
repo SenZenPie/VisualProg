@@ -1,3 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.trimAndFormat = exports.capitalize = void 0;
+exports.createUser = createUser;
+exports.createBook = createBook;
+exports.calculateArea = calculateArea;
+exports.getStatusColor = getStatusColor;
+exports.getFirstElement = getFirstElement;
+exports.findById = findById;
 function createUser(id, name, email, isActive) {
     return {
         id: id,
@@ -44,11 +53,13 @@ var capitalize = function (str, uppercase) {
     var result = str.charAt(0).toUpperCase() + str.slice(1);
     return uppercase ? result.toUpperCase() : result;
 };
+exports.capitalize = capitalize;
 var trimAndFormat = function (str, uppercase) {
     if (uppercase === void 0) { uppercase = false; }
     var trimmed = str.trim();
     return uppercase ? trimmed.toUpperCase() : trimmed;
 };
+exports.trimAndFormat = trimAndFormat;
 console.log(capitalize("hello world!"));
 console.log(capitalize("hello world!", true));
 console.log(trimAndFormat("   hello!   "));

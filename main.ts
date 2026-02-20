@@ -1,3 +1,13 @@
+export {
+  createUser,
+  createBook,
+  calculateArea,
+  getStatusColor,
+  capitalize,
+  trimAndFormat,
+  getFirstElement,
+  findById
+};
 interface User {
     id: number;
     name: string;
