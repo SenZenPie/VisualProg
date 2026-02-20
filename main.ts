@@ -45,3 +45,18 @@ function calculateArea(shape: 'circle' | 'square', param: number): number{
 
 console.log(calculateArea('circle', 4));
 console.log(calculateArea('square', 10));
+
+type Status = 'active' | 'inactive' | 'new';
+function  getStatusColor(status: Status): string{
+    switch (status){
+        case 'active':
+            return 'green';
+        case 'inactive':
+            return 'red';
+        case 'new':
+            return 'blue';
+        default:
+            return '';
+    }           
+}
+
