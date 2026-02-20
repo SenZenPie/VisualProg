@@ -3,6 +3,7 @@ import {
   createUser,
   createBook,
   calculateArea,
+  getStatusColor,
 } from './main';
 
 test('createUser создает пользователя', () => {
@@ -35,4 +36,10 @@ test('calculateArea правильно считает площадь круга'
 test('calculateArea правильно считает площадь квадрата', () => {
   const area = calculateArea('square', 5);
   expect(area).toBe(25);
+});
+
+test('getStatusColor возвращает правильный цвет', () => {
+  expect(getStatusColor('active')).toBe('green');
+  expect(getStatusColor('inactive')).toBe('red');
+  expect(getStatusColor('new')).toBe('blue');
 });
