@@ -13,3 +13,22 @@ function createUser (id:number, name:string, email:string, isActive:boolean): Us
         isActive: isActive
     };
 }
+
+interface Book {
+    title: string;
+    author: string;
+    year?: number;
+    genre: string | number;
+}
+
+function createBook (book: Book) : Book {
+    return book;
+}
+
+const myBook = createBook({
+    title: "Blood Meridian",
+    author: "Cormac Mc'Kartey",
+    genre: "Western"
+});
+
+console.log(myBook);
