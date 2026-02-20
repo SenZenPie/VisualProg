@@ -6,6 +6,7 @@ import {
   getStatusColor,
   capitalize,
   trimAndFormat,
+  getFirstElement,
 } from './main';
 
 test('createUser создает пользователя', () => {
@@ -60,4 +61,12 @@ test('trimAndFormat обрезает пробелы', () => {
 
 test('trimAndFormat обрезает и делает uppercase', () => {
   expect(trimAndFormat('  hello  ', true)).toBe('HELLO');
+});
+
+test('getFirstElement возвращает первый элемент массива', () => {
+  expect(getFirstElement([1, 2, 3])).toBe(1);
+});
+
+test('getFirstElement возвращает undefined для пустого массива', () => {
+  expect(getFirstElement([])).toBeUndefined();
 });
