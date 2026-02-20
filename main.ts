@@ -75,6 +75,20 @@ const trimAndFormat: StringFormatter = (str, uppercase = false) => {
 
 console.log(capitalize("hello world!"));
 console.log(capitalize("hello world!", true));
-
 console.log(trimAndFormat("   hello!   "));
 console.log(trimAndFormat("   hello!   ", true));
+
+function getFirstElement<T>(arr: T[]): T | undefined {
+    return arr[0];
+}
+
+const numbers = [10, 20, 30];
+const firstNum = getFirstElement(numbers);
+console.log(`Первое число: ${firstNum}`);
+
+const strings = ["TypeScript", "JavaScript", "Python"];
+const firstStr = getFirstElement(strings);
+console.log(`Первая строка: ${firstStr}`);
+
+console.log(`Пустой массив: ${getFirstElement([])}`);
+

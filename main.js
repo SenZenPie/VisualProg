@@ -53,3 +53,13 @@ console.log(capitalize("hello world!"));
 console.log(capitalize("hello world!", true));
 console.log(trimAndFormat("   hello!   "));
 console.log(trimAndFormat("   hello!   ", true));
+function getFirstElement(arr) {
+    return arr[0];
+}
+var numbers = [10, 20, 30];
+var firstNum = getFirstElement(numbers);
+console.log("\u041F\u0435\u0440\u0432\u043E\u0435 \u0447\u0438\u0441\u043B\u043E: ".concat(firstNum));
+var strings = ["TypeScript", "JavaScript", "Python"];
+var firstStr = getFirstElement(strings);
+console.log("\u041F\u0435\u0440\u0432\u0430\u044F \u0441\u0442\u0440\u043E\u043A\u0430: ".concat(firstStr));
+console.log("\u041F\u0443\u0441\u0442\u043E\u0439 \u043C\u0430\u0441\u0441\u0438\u0432: ".concat(getFirstElement([])));
