@@ -4,6 +4,7 @@ import {
   createBook,
   calculateArea,
   getStatusColor,
+  capitalize,
 } from './main';
 
 test('createUser создает пользователя', () => {
@@ -42,4 +43,12 @@ test('getStatusColor возвращает правильный цвет', () => 
   expect(getStatusColor('active')).toBe('green');
   expect(getStatusColor('inactive')).toBe('red');
   expect(getStatusColor('new')).toBe('blue');
+});
+
+test('capitalize делает первую букву заглавной', () => {
+  expect(capitalize('hello')).toBe('Hello');
+});
+
+test('capitalize делает всю строку заглавной если uppercase = true', () => {
+  expect(capitalize('hello', true)).toBe('HELLO');
 });
