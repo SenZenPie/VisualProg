@@ -5,6 +5,7 @@ import {
   calculateArea,
   getStatusColor,
   capitalize,
+  trimAndFormat,
 } from './main';
 
 test('createUser создает пользователя', () => {
@@ -51,4 +52,12 @@ test('capitalize делает первую букву заглавной', () =>
 
 test('capitalize делает всю строку заглавной если uppercase = true', () => {
   expect(capitalize('hello', true)).toBe('HELLO');
+});
+
+test('trimAndFormat обрезает пробелы', () => {
+  expect(trimAndFormat('  hello  ')).toBe('hello');
+});
+
+test('trimAndFormat обрезает и делает uppercase', () => {
+  expect(trimAndFormat('  hello  ', true)).toBe('HELLO');
 });
