@@ -15,3 +15,13 @@ var myBook = createBook({
     genre: "Western"
 });
 console.log(myBook);
+function calculateArea(shape, param) {
+    if (shape === 'circle') {
+        return Math.PI * param * param;
+    }
+    else {
+        return param * param;
+    }
+}
+console.log(calculateArea('circle', 4));
+console.log(calculateArea('square', 10));

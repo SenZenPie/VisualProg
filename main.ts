@@ -32,3 +32,16 @@ const myBook = createBook({
 });
 
 console.log(myBook);
+
+function calculateArea(shape: 'circle', radius: number): number;
+function calculateArea(shape: 'square', side: number): number;
+function calculateArea(shape: 'circle' | 'square', param: number): number{
+    if (shape === 'circle') {
+        return Math.PI * param * param;
+    } else {
+        return param * param;
+    }
+}
+
+console.log(calculateArea('circle', 4));
+console.log(calculateArea('square', 10));
