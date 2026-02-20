@@ -32,7 +32,7 @@ function calculateArea(shape, param) {
         return param * param;
     }
 }
-console.log(calculateArea('circle', 4));
+console.log(calculateArea('circle', 2));
 console.log(calculateArea('square', 10));
 function getStatusColor(status) {
     switch (status) {
