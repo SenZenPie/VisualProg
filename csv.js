@@ -78,25 +78,27 @@ function formatCSVFileToJSONFile(input, output, delimiter) {
         });
     });
 }
-function main() {
-    return __awaiter(this, void 0, void 0, function () {
-        var data, result, testCsv;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    data = ["p1;p2;p3;p4", "1;A;B;c", "2;b;n;m"];
-                    result = csvToJSON(data, ';');
-                    console.log(result);
-                    testCsv = 'p1;p2;p3;p4\n1;A;B;c\n2;b;n;m';
-                    (0, fs_1.writeFileSync)('test.csv', testCsv);
-                    console.log('Создан файл test.csv');
-                    return [4 /*yield*/, formatCSVFileToJSONFile('test.csv', 'output.json', ';')];
-                case 1:
-                    _a.sent();
-                    console.log('Готово! Результат в output.json');
-                    return [2 /*return*/];
-            }
+if (import.meta.url === "file://".concat(process.argv[1])) {
+    function main() {
+        return __awaiter(this, void 0, void 0, function () {
+            var data, result, testCsv;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        data = ["p1;p2;p3;p4", "1;A;B;c", "2;b;n;m"];
+                        result = csvToJSON(data, ';');
+                        console.log(result);
+                        testCsv = 'p1;p2;p3;p4\n1;A;B;c\n2;b;n;m';
+                        (0, fs_1.writeFileSync)('test.csv', testCsv);
+                        console.log('Создан файл test.csv');
+                        return [4 /*yield*/, formatCSVFileToJSONFile('test.csv', 'output.json', ';')];
+                    case 1:
+                        _a.sent();
+                        console.log('Готово! Результат в output.json');
+                        return [2 /*return*/];
+                }
+            });
         });
-    });
+    }
+    main();
 }
-main();
