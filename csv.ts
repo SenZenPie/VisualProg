@@ -34,13 +34,12 @@ export async function formatCSVFileToJSONFile(input: string, output: string, del
     await writeFile(output, JSON.stringify(json, null, 2), 'utf-8');
 }
 
-
 async function main() {
     const data = ["p1;p2;p3;p4", "1;A;B;c","2;b;n;m"];
     const result = csvToJSON(data, ';');
     console.log(result);
 
-    const testCsv = 'p1;p2;p3;p4\n1;A;B;c\n2;b;n;m';
+    const testCsv = 'p1;p2;p3;p4\n1;A;B;c\nAnna;30;Kiev';
     writeFileSync('test.csv', testCsv);
     console.log('Создан файл test.csv');
 
