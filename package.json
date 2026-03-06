@@ -1,6 +1,6 @@
 {
   "scripts": {
-  "test": "vitest"
+  "test": "vitest run"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.18",
