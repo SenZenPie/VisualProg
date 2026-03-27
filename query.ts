@@ -72,3 +72,17 @@ export function createHaving<T>(): Having<T> {
         };
     };
 }
+
+export function query<T>(
+    ...steps: Array<Transform<T> | GroupTransform<T, any>>
+): Transform<T> {
+    return (data: T[]): T[] => {
+        let currentData: any = data;
+        
+        for (const step of steps) {
+            currentData = step(currentData);
+        }
+        
+        return currentData;
+    };
+}
