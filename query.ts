@@ -9,3 +9,20 @@ export function createWhere<T>(): Where<T> {
         };
     };
 }
+
+export type Sort<T> = <K extends keyof T>(key: K) => Transform<T>;
+
+export function createSort<T>(): Sort<T> {
+    return <K extends keyof T>(key: K): Transform<T> => {
+        return (data: T[]): T[] => {
+            return [...data].sort((a, b) => {
+                const aVal = a[key];
+                const bVal = b[key];
+                
+                if (aVal < bVal) return -1;
+                if (aVal > bVal) return 1;
+                return 0;
+            });
+        };
+    };
+}
