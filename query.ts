@@ -56,3 +56,19 @@ export function createGroupBy<T>(): GroupBy<T> {
         };
     };
 }
+
+export type GroupTransform<T, K extends keyof T> = (groups: Group<T, K>[]) => Group<T, K>[];
+
+export type Having<T> = <K extends keyof T>(
+    predicate: (group: Group<T, K>) => boolean
+) => GroupTransform<T, K>;
+
+export function createHaving<T>(): Having<T> {
+    return <K extends keyof T>(
+        predicate: (group: Group<T, K>) => boolean
+    ): GroupTransform<T, K> => {
+        return (groups: Group<T, K>[]): Group<T, K>[] => {
+            return groups.filter(predicate);
+        };
+    };
+}
