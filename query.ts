@@ -1,0 +1,1 @@
+export type Transform<T> = (data: T[]) => T[];
