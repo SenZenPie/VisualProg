@@ -26,3 +26,33 @@ export function createSort<T>(): Sort<T> {
         };
     };
 }
+
+export type Group<T, K extends keyof T> = {
+    key: T[K];
+    items: T[];
+};
+
+export type GroupBy<T> = <K extends keyof T>(key: K) => (data: T[]) => Group<T, K>[];
+
+export function createGroupBy<T>(): GroupBy<T> {
+    return <K extends keyof T>(key: K) => {
+        return (data: T[]): Group<T, K>[] => {
+            const groupsMap = new Map<T[K], Group<T, K>>();
+            
+            for (const item of data) {
+                const groupKey = item[key];
+                
+                if (!groupsMap.has(groupKey)) {
+                    groupsMap.set(groupKey, {
+                        key: groupKey,
+                        items: []
+                    });
+                }
+                
+                groupsMap.get(groupKey)!.items.push(item);
+            }
+            
+            return Array.from(groupsMap.values());
+        };
+    };
+}
