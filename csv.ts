@@ -39,7 +39,7 @@ async function main() {
     const result = csvToJSON(data, ';');
     console.log(result);
 
-    const testCsv = 'p1;p2;p3;p4\n1;A;B;c\nAnna;30;Kiev';
+    const testCsv = 'p1;p2;p3;p4\n1;A;B;c\nPavel;21;Novosibirsk;Russia';
     writeFileSync('test.csv', testCsv);
     console.log('Создан файл test.csv');
 
