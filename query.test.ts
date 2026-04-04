@@ -1,13 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { 
-    createWhere, 
-    createSort, 
-    createGroupBy, 
-    createHaving,
-    query 
-} from './query.js';
+import { query, createGroupBy, createHaving } from './query.js';
 
-describe('Типобезопасный конвейер преобразований', () => {
+describe('Lab5: Query pipeline with order enforcement', () => {
     type User = {
         id: number;
         name: string;
@@ -24,162 +18,132 @@ describe('Типобезопасный конвейер преобразован
         { id: 5, name: "Alice", surname: "Smith", age: 28, city: "NY" },
     ];
 
-    const where = createWhere<User>();
-    const sort = createSort<User>();
-    const groupBy = createGroupBy<User>();
-    const having = createHaving<User>();
+    describe('Correct order works', () => {
+        test('where -> where -> groupBy -> having', () => {
+            const result = query<User>()
+                .where("surname", "Doe")
+                .where("city", "NY")
+                .groupBy("city")
+                .having(g => g.items.length > 1)
+                .execute(users);
 
-    describe('Where - фильтрация', () => {
-        test('должен фильтровать по строковому полю', () => {
-            const filterByName = query<User>(where("name", "John"));
-            const result = filterByName(users);
-            
-            expect(result).toHaveLength(3);
-            expect(result.every(u => u.name === "John")).toBe(true);
-        });
-
-        test('должен фильтровать по числовому полю', () => {
-            const filterByAge = query<User>(where("age", 35));
-            const result = filterByAge(users);
-            
-            expect(result).toHaveLength(2);
-            expect(result.every(u => u.age === 35)).toBe(true);
-        });
-
-        test('должен применять несколько фильтров', () => {
-            const filterJohnDoe = query<User>(
-                where("name", "John"),
-                where("surname", "Doe")
-            );
-            const result = filterJohnDoe(users);
-            
-            expect(result).toHaveLength(3);
-            expect(result.every(u => u.name === "John" && u.surname === "Doe")).toBe(true);
-        });
-    });
-
-    describe('Sort - сортировка', () => {
-        test('должен сортировать по числовому полю по возрастанию', () => {
-            const sortByAge = query<User>(sort("age"));
-            const result = sortByAge(users);
-            
-            expect(result[0].age).toBe(28);
-            expect(result[1].age).toBe(33);
-            expect(result[2].age).toBe(34);
-            expect(result[3].age).toBe(35);
-            expect(result[4].age).toBe(35);
-        });
-
-        test('должен сортировать по строковому полю', () => {
-            const sortByName = query<User>(sort("name"));
-            const result = sortByName(users);
-            
-            expect(result[0].name).toBe("Alice");
-            expect(result[1].name).toBe("John");
-            expect(result[2].name).toBe("John");
-            expect(result[3].name).toBe("John");
-            expect(result[4].name).toBe("Mike");
-        });
-    });
-
-    describe('GroupBy - группировка', () => {
-        test('должен группировать по городу', () => {
-            const groupByCity = groupBy("city");
-            const result = groupByCity(users);
-            
-            expect(result).toHaveLength(2);
-            
-            const nyGroup = result.find(g => g.key === "NY");
-            const laGroup = result.find(g => g.key === "LA");
-            
-            expect(nyGroup?.items).toHaveLength(3);
-            expect(laGroup?.items).toHaveLength(2);
-            expect(nyGroup?.items.every(u => u.city === "NY")).toBe(true);
-            expect(laGroup?.items.every(u => u.city === "LA")).toBe(true);
-        });
-
-        test('должен группировать по имени', () => {
-            const groupByName = groupBy("name");
-            const result = groupByName(users);
-            
-            expect(result).toHaveLength(3);
-            
-            const johnGroup = result.find(g => g.key === "John");
-            const mikeGroup = result.find(g => g.key === "Mike");
-            const aliceGroup = result.find(g => g.key === "Alice");
-            
-            expect(johnGroup?.items).toHaveLength(3);
-            expect(mikeGroup?.items).toHaveLength(1);
-            expect(aliceGroup?.items).toHaveLength(1);
-        });
-    });
-
-    describe('Having - фильтрация групп', () => {
-        test('должен фильтровать группы по размеру', () => {
-            const groups = groupBy("city")(users);
-            const filterGroups = having(group => group.items.length > 2);
-            const result = filterGroups(groups);
-            
             expect(result).toHaveLength(1);
             expect(result[0].key).toBe("NY");
-            expect(result[0].items).toHaveLength(3);
+            expect(result[0].items).toHaveLength(2);
+            expect(result[0].items[0].age).toBeDefined();
+            expect(result[0].items[1].age).toBeDefined();
         });
 
-        test('должен фильтровать группы по условию внутри элементов', () => {
-            const groups = groupBy("city")(users);
-            const filterGroups = having(group => group.items.some(u => u.age > 34));
-            const result = filterGroups(groups);
-            
-            expect(result).toHaveLength(1);
-            expect(result[0].key).toBe("LA");
-        });
-    });
+        test('where -> groupBy -> having', () => {
+            const result = query<User>()
+                .where("surname", "Doe")
+                .groupBy("city")
+                .having(g => g.items.length > 1)
+                .execute(users);
 
-    describe('Комбинированные конвейеры', () => {
-        test('фильтрация + сортировка', () => {
-            const pipeline = query<User>(
-                where("name", "John"),
-                where("surname", "Doe"),
-                sort("age")
-            );
-            
-            const result = pipeline(users);
-            
+            expect(result).toHaveLength(2);
+        });
+
+        test('where -> sort', () => {
+            const result = query<User>()
+                .where("name", "John")
+                .sort("age")
+                .execute(users);
+
             expect(result).toHaveLength(3);
             expect(result[0].age).toBe(33);
             expect(result[1].age).toBe(34);
             expect(result[2].age).toBe(35);
         });
 
-        test('фильтрация → группировка', () => {
-            const filtered = where("surname", "Doe")(users);
-            const grouped = groupBy("city")(filtered);
-            
-            expect(grouped).toHaveLength(2);
-            
-            const nyGroup = grouped.find(g => g.key === "NY");
-            const laGroup = grouped.find(g => g.key === "LA");
-            
-            expect(nyGroup?.items).toHaveLength(2);
-            expect(laGroup?.items).toHaveLength(2);
+        test('only where', () => {
+            const result = query<User>()
+                .where("name", "John")
+                .execute(users);
+
+            expect(result).toHaveLength(3);
         });
 
-        test('группировка → фильтрация групп', () => {
-            const groups = groupBy("city")(users);
-            const filteredGroups = having(group => group.items.length > 2)(groups);
-            
-            expect(filteredGroups).toHaveLength(1);
-            expect(filteredGroups[0].key).toBe("NY");
+        test('only sort', () => {
+            const result = query<User>()
+                .sort("age")
+                .execute(users);
+
+            expect(result[0].age).toBe(28);
+            expect(result[4].age).toBe(35);
         });
 
-        test('полный конвейер: фильтрация → группировка → фильтрация групп', () => {
-            const filtered = where("surname", "Doe")(users);
-            const grouped = groupBy("city")(filtered);
-            const result = having(group => group.items.some(u => u.age > 34))(grouped);
-            
-            expect(result).toHaveLength(1);
+        test('where -> groupBy', () => {
+            const result = query<User>()
+                .where("surname", "Doe")
+                .groupBy("city")
+                .execute(users);
+
+            expect(result).toHaveLength(2);
+        });
+
+        test('groupBy -> having -> sort (sort groups by key)', () => {
+            const result = query<User>()
+                .groupBy("city")
+                .having(g => g.items.length > 1)
+                .sort("key")
+                .execute(users);
+
+            expect(result).toHaveLength(2);
             expect(result[0].key).toBe("LA");
-            expect(result[0].items).toHaveLength(2);
+            expect(result[1].key).toBe("NY");
+        });
+    });
+
+    describe('Incorrect order throws runtime errors', () => {
+        test('sort before where throws error', () => {
+            expect(() => {
+                query<User>()
+                    .sort("age")
+                    .where("name", "John");
+            }).toThrow();
+        });
+
+        test('groupBy before where throws error', () => {
+            expect(() => {
+                query<User>()
+                    .groupBy("city")
+                    .where("name", "John");
+            }).toThrow();
+        });
+
+        test('having before groupBy throws error', () => {
+            expect(() => {
+                query<User>()
+                    .where("name", "John")
+                    .having(g => g.items.length > 1);
+            }).toThrow();
+        });
+
+        test('sort before groupBy throws error', () => {
+            expect(() => {
+                query<User>()
+                    .where("name", "John")
+                    .groupBy("city")
+                    .sort("age")
+                    .having(g => g.items.length > 1);
+            }).toThrow();
+        });
+    });
+
+    describe('Runtime behavior', () => {
+        test('groupBy works correctly', () => {
+            const groupByFn = createGroupBy<User>()("city");
+            const result = groupByFn(users);
+            expect(result.find(g => g.key === "NY")?.items).toHaveLength(3);
+        });
+
+        test('having works correctly', () => {
+            const groups = createGroupBy<User>()("city")(users);
+            const havingFn = createHaving<User>()(g => g.items.length > 2);
+            const result = havingFn(groups);
+            expect(result).toHaveLength(1);
+            expect(result[0].key).toBe("NY");
         });
     });
 });
