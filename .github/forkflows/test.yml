@@ -1,31 +1,25 @@
-name: Run Tests
+name: Tests
 
 on:
   push:
-    branches:
-      - main
-      - develop
-      - "*"
-
+    branches: [ master, main ]
   pull_request:
-    branches:
-      - main
+    branches: [ master, main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
+      - uses: actions/checkout@v4
+      
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-
+          node-version: '18.x'
+      
       - name: Install dependencies
         run: npm install
-
+      
       - name: Run tests
-        run: npm run test
+        run: npm test
