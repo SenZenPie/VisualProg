@@ -9,8 +9,21 @@ export async function fetchBooks(): Promise<Book[]> {
   return data;
 }
 
-export async function fetchBookCover(isbn: string): Promise<string | undefined> {
+async function fetchBookCoverUrl(isbn: string): Promise<string | undefined> {
   const response = await fetch(`${GOOGLE_BOOKS_API}?q=isbn:${isbn}`);
+  if (!response.ok) return undefined;
   const data = await response.json();
   return data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
 }
+
+export async function fetchBookCoverAsBlob(isbn: string): Promise<Blob | undefined> {
+  const url = await fetchBookCoverUrl(isbn);
+  if (!url) return undefined;
+  
+  const response = await fetch(url);
+  if (!response.ok) return undefined;
+  
+  const blob = await response.blob();
+  return blob;
+}
+

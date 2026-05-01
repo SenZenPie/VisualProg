@@ -4,5 +4,5 @@ export interface Book {
   isbn: string;
   pageCount: number;
   authors: string[];
-  coverImage?: string;
+  coverBlob?: Blob;
 }

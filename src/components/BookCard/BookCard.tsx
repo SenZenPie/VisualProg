@@ -1,17 +1,24 @@
+import { useMemo } from 'react';
+import './BookCard.css';
+
 interface BookCardProps {
   title: string;
   authors: string[];
-  coverImage?: string;
+  coverBlob?: Blob;
 }
 
-const BookCard = ({ title, authors, coverImage }: BookCardProps) => {
+const BookCard = ({ title, authors, coverBlob }: BookCardProps) => {
+  const imageUrl = useMemo(() => {
+    return coverBlob ? URL.createObjectURL(coverBlob) : null;
+  }, [coverBlob]);
+
   return (
     <div className="book-card">
       <div className="book-cover">
-        {coverImage ? (
-          <img src={coverImage} alt={title} />
+        {imageUrl ? (
+          <img src={imageUrl} alt={title} />
         ) : (
-          <div>Нет обложки</div>
+          <div className="no-image">X</div>
         )}
       </div>
       <div className="book-title">{title}</div>
@@ -19,3 +26,5 @@ const BookCard = ({ title, authors, coverImage }: BookCardProps) => {
     </div>
   );
 };
+
+export default BookCard;
