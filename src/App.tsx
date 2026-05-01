@@ -14,7 +14,7 @@ function App() {
         const booksData = await fetchBooks();
         
         const booksWithCovers = await Promise.all(
-          booksData.slice(0, 12).map(async (book) => {
+          booksData.slice(0, 80).map(async (book) => {
             if (!book.isbn) return book;
             const coverBlob = await fetchBookCoverAsBlob(book.isbn);
             return { ...book, coverBlob };
