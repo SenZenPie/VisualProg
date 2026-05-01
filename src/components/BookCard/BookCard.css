@@ -1,0 +1,16 @@
+.book-card {
+  width: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.book-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.book-authors {
+  font-size: 14px;
+  color: #666;
+}
