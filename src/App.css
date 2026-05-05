@@ -55,6 +55,13 @@ body {
   background: linear-gradient(180deg, #0f172a 0%, #334155 100%) !important;
 }
 
+.clear-bg.day, .clear-bg.morning {
+  background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+.clear-bg.night, .clear-bg.evening {
+  background: linear-gradient(180deg, #0b132d 0%, #1c2c54 100%) !important;
+}
+
 .weather-card-main {
   width: 100%;
   max-width: 360px;
@@ -138,12 +145,6 @@ h2 {
 
 .hourly-item span {
   font-weight: 500;
-}
-
-.hourly-item img {
-  width: 38px;
-  height: 38px;
-  margin: 5px 0;
 }
 
 .details-grid {

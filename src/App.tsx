@@ -4,7 +4,7 @@ import { getWeatherData, getAirPollution, getCoordinates } from './services/weat
 import type { WeatherForecastItem, AirPollutionResponse } from './types/weather';
 import './App.css';
 
-const CITY_NAME = 'Лас Вегас';
+const CITY_NAME = 'Ангарск';
 
 function App() {
   const [forecasts, setForecasts] = useState<WeatherForecastItem[]>([]);
@@ -121,7 +121,7 @@ function App() {
         </div>
 
         <div className="bottom-section">
-          <WeatherForecast forecasts={forecasts} />
+          <WeatherForecast forecasts={forecasts} timezone={timezone} />
         </div>
       </div>
     </div>
