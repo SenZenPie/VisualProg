@@ -3,16 +3,16 @@
   flex-direction: column;
   gap: 18px;
 }
+
 .daily-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .day-name { flex: 1; font-size: 13px; opacity: 0.9; }
-.daily-row img { 
-  width: 30px; 
-  filter: brightness(0) invert(1);
-}
+.daily-row img { width: 30px; }
+
 .daily-temps {
   display: flex;
   gap: 12px;
@@ -21,4 +21,5 @@
   justify-content: flex-end;
   font-size: 13px;
 }
+
 .min { opacity: 0.6; }

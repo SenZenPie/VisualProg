@@ -4,7 +4,7 @@ import './WeatherForecast.css';
 interface Props { forecasts: WeatherForecastItem[]; }
 
 const WeatherForecast = ({ forecasts }: Props) => {
-  const daily = forecasts.filter((_, i) => i % 8 === 0).slice(1, 6);
+  const daily = forecasts.filter((_, i) => i % 8 === 0).slice(1, 7);
 
   return (
     <div className="daily-list">

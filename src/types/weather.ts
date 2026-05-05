@@ -19,6 +19,7 @@ export interface WeatherForecastItem {
 export interface WeatherResponse {
   city: { 
     name: string; 
+    country: string;
     timezone: number; 
   };
   list: WeatherForecastItem[];
