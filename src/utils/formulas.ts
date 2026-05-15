@@ -1,4 +1,4 @@
-import { CellValue } from "../types/spreadsheet";
+import type { CellValue } from "../types/spreadsheet";
 import { idToCell } from "./cellHelpers";
 
 function getRangeCells(rangeStr: string): {rows: number[]; cols: number[]}{
