@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
 import Cell from '../Cell/Cell';
 import FormulaBar from '../FormulaBar/FormulaBar';
+import ContextMenu from '../ContextMenu/ContextMenu';
 import { useSpreadsheet } from '../../hooks/useSpreadsheet';
-import { cellToID } from '../../utils/cellHelpers';
 import './Spreadsheet.css';
 
 const DEFAULT_CELL_WIDTH = 100;
@@ -10,17 +10,17 @@ const DEFAULT_ROW_HEIGHT = 28;
 const HEADER_WIDTH = 45;
 const HEADER_HEIGHT = 28;
 
-const Spreadsheet = () =>{
+const Spreadsheet = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number; col: number } | null>(null);
   
   const {
     cells,
     rows,
     cols,
     selectedCell,
-    selectedRange,
     editingCell,
     editValue,
     getCellValue,
@@ -34,12 +34,12 @@ const Spreadsheet = () =>{
     deleteColumn
   } = useSpreadsheet();
 
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) =>{
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollLeft(e.currentTarget.scrollLeft);
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
 
-  const getDisplayValue = (row: number, col: number): string =>{
+  const getDisplayValue = (row: number, col: number): string => {
     const value = getCellValue(row, col);
     if (value === null) return '';
     if (typeof value === 'number') return value.toString();
@@ -47,7 +47,7 @@ const Spreadsheet = () =>{
     return value;
   };
 
-  const getEditValueForCell = (row: number, col: number): string =>{
+  const getEditValueForCell = (row: number, col: number): string => {
     const cell = cells[row][col];
     if (cell.formula !== null) return cell.formula;
     if (cell.value !== null) return String(cell.value);
@@ -62,18 +62,51 @@ const Spreadsheet = () =>{
   const endRow = Math.min(startRow + visibleRows, rows);
   const endCol = Math.min(startCol + visibleCols, cols);
 
-  const getCellLeft = (col: number): number =>{
+  const getCellLeft = (col: number): number => {
     return col * DEFAULT_CELL_WIDTH;
   };
 
-  const getCellTop = (row: number): number =>{
+  const getCellTop = (row: number): number => {
     return row * DEFAULT_ROW_HEIGHT;
   };
 
-  const handleContextMenu = (e: React.MouseEvent, row: number, col: number) =>{
+  const handleContextMenu = useCallback((e: React.MouseEvent, row: number, col: number) => {
     e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, row, col });
     selectCell(row, col, false);
-  };
+  }, [selectCell]);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const handleAddRowBelow = useCallback(() => {
+    if (contextMenu) {
+      addRow(contextMenu.row);
+      closeContextMenu();
+    }
+  }, [contextMenu, addRow, closeContextMenu]);
+
+  const handleDeleteRow = useCallback(() => {
+    if (contextMenu) {
+      deleteRow(contextMenu.row);
+      closeContextMenu();
+    }
+  }, [contextMenu, deleteRow, closeContextMenu]);
+
+  const handleAddColumnRight = useCallback(() => {
+    if (contextMenu) {
+      addColumn(contextMenu.col);
+      closeContextMenu();
+    }
+  }, [contextMenu, addColumn, closeContextMenu]);
+
+  const handleDeleteColumn = useCallback(() => {
+    if (contextMenu) {
+      deleteColumn(contextMenu.col);
+      closeContextMenu();
+    }
+  }, [contextMenu, deleteColumn, closeContextMenu]);
 
   return (
     <div className="spreadsheet">
@@ -85,7 +118,7 @@ const Spreadsheet = () =>{
           }
         }}
         onCommit={() => {
-          if (selectedCell && editingCell){
+          if (selectedCell && editingCell) {
             stopEdit();
           }
         }}
@@ -124,6 +157,7 @@ const Spreadsheet = () =>{
                   height: DEFAULT_ROW_HEIGHT,
                   top: getCellTop(row)
                 }}
+                onContextMenu={(e) => handleContextMenu(e, row, -1)}
               >
                 {row + 1}
               </div>
@@ -151,6 +185,7 @@ const Spreadsheet = () =>{
                     onDoubleClick={startEdit}
                     onEditChange={setEditValue}
                     onEditComplete={stopEdit}
+                    onContextMenu={handleContextMenu}
                     width={DEFAULT_CELL_WIDTH}
                     height={DEFAULT_ROW_HEIGHT}
                   />
@@ -160,6 +195,20 @@ const Spreadsheet = () =>{
           </div>
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={closeContextMenu}
+          onAddRowAbove={() => {}}
+          onAddRowBelow={handleAddRowBelow}
+          onDeleteRow={handleDeleteRow}
+          onAddColumnLeft={() => {}}
+          onAddColumnRight={handleAddColumnRight}
+          onDeleteColumn={handleDeleteColumn}
+        />
+      )}
     </div>
   );
 };

@@ -1,8 +1,7 @@
-import {memo, useRef, useEffect} from 'react';
-import type { Position } from '../../types/spreadsheet';
-import'./Cell.css';
+import { memo, useRef, useEffect } from 'react';
+import './Cell.css';
 
-interface CellProps{
+interface CellProps {
   row: number;
   col: number;
   value: string;
@@ -13,6 +12,7 @@ interface CellProps{
   onDoubleClick: (row: number, col: number) => void;
   onEditChange: (value: string) => void;
   onEditComplete: () => void;
+  onContextMenu: (e: React.MouseEvent, row: number, col: number) => void;
   width: number;
   height: number;
 }
@@ -28,30 +28,35 @@ const Cell = memo(({
   onDoubleClick,
   onEditChange,
   onEditComplete,
+  onContextMenu,
   width,
   height
-}: CellProps) =>{
+}: CellProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isEditing && inputRef.current){
+    if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [isEditing]);
 
-  const handleClick = (e: React.MouseEvent) =>{
+  const handleClick = (e: React.MouseEvent) => {
     onSelect(row, col, e.shiftKey);
   };
 
-  const handleDoubleClick = () =>{
+  const handleDoubleClick = () => {
     onDoubleClick(row, col);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) =>{
-    if (e.key === 'Enter'){
+  const handleContextMenu = (e: React.MouseEvent) => {
+    onContextMenu(e, row, col);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
       onEditComplete();
-    } else if (e.key === 'Escape'){
+    } else if (e.key === 'Escape') {
       onEditComplete();
     }
   };
@@ -63,14 +68,15 @@ const Cell = memo(({
     top: `${row * height}px`
   };
 
-  return(
+  return (
     <div
       className={`cell ${isSelected ? 'selected' : ''}`}
       style={style}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
     >
-      {isEditing ?(
+      {isEditing ? (
         <input
           ref={inputRef}
           type="text"
@@ -80,7 +86,7 @@ const Cell = memo(({
           onBlur={onEditComplete}
           className="cell-input"
         />
-      ) :(
+      ) : (
         <div className="cell-content">{value}</div>
       )}
     </div>

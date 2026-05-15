@@ -24,7 +24,7 @@ export function evaluateFormula(formula: string, getCellValue: (row: number, col
     if (!formula.startsWith("=")) return formula;
     const expr = formula.slice(1).toUpperCase();
 
-    const sumMatch = expr.match(/СУММ\(([A-Z]+[0-9]+:[A-Z]+[0-9]+)\)$/)
+    const sumMatch = expr.match(/SUM\(([A-Z]+[0-9]+:[A-Z]+[0-9]+)\)$/)
     if (sumMatch) {
         const {rows, cols} = getRangeCells(sumMatch[1]);
         let sum = 0;
@@ -36,7 +36,7 @@ export function evaluateFormula(formula: string, getCellValue: (row: number, col
         }
         return sum;   
     }
-    const avgMatch = expr.match(/СРЗНАЧ\(([A-Z]+[0-9]+:[A-Z]+[0-9]+)\)$/)
+    const avgMatch = expr.match(/AVERAGE\(([A-Z]+[0-9]+:[A-Z]+[0-9]+)\)$/)
     if (avgMatch) {
         const {rows, cols} = getRangeCells(avgMatch[1]);
         let sum = 0;
