@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { Cell, CellValue, Position, Range } from '../types/spreadsheet';
 import { evaluateFormula } from '../utils/formulas';
 
-const ROWS = 1000;
+const ROWS = 100;
 const COLS = 26;
 
 function createEmptyCell(): Cell {

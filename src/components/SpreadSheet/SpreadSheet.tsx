@@ -131,20 +131,27 @@ const Spreadsheet = () => {
                             return Array.from({ length: visibleEndCol - visibleStartCol }, (_, j) => {
                                 const col = visibleStartCol + j;
                                 const isEditing = editingCell?.row === row && editingCell?.col === col;
+                                const cellValue = getCellValue(row, col);
+                                const displayValue = cellValue === null ? '' : String(cellValue);
+                                
                                 return (
                                     <Cell
                                         key={`${row}-${col}`}
-                                        row={row} col={col}
-                                        value={isEditing ? editValue : String(getCellValue(row, col) ?? '')}
+                                        row={row}
+                                        col={col}
+                                        value={displayValue}
                                         isSelected={selectedCell?.row === row && selectedCell?.col === col}
                                         isSelectedRange={isCellInRange(row, col)}
                                         isEditing={isEditing}
                                         editValue={editValue}
                                         onSelect={selectCell}
-                                        onDoubleClick={startEdit}
+                                        onDoubleClick={() => startEdit(row, col)}
                                         onEditChange={setEditValue}
                                         onEditComplete={stopEdit}
-                                        onContextMenu={(e, r, c) => setContextMenu({ x: e.clientX, y: e.clientY, row: r, col: c })}
+                                        onContextMenu={(e, r, c) => {
+                                            e.preventDefault();
+                                            setContextMenu({ x: e.clientX, y: e.clientY, row: r, col: c });
+                                        }}
                                         width={getColumnWidth(col)}
                                         height={DEFAULT_ROW_HEIGHT}
                                         left={columnOffsets[col]}
@@ -159,13 +166,33 @@ const Spreadsheet = () => {
 
             {contextMenu && (
                 <ContextMenu
-                    x={contextMenu.x} y={contextMenu.y}
+                    x={contextMenu.x}
+                    y={contextMenu.y}
                     onClose={() => setContextMenu(null)}
-                    onAddRowBelow={() => { addRow(contextMenu.row); setContextMenu(null); }}
-                    onDeleteRow={() => { deleteRow(contextMenu.row); setContextMenu(null); }}
-                    onAddColumnRight={() => { addColumn(contextMenu.col); setContextMenu(null); }}
-                    onDeleteColumn={() => { deleteColumn(contextMenu.col); setContextMenu(null); }}
-                    onAddRowAbove={() => {}} onAddColumnLeft={() => {}}
+                    onAddRowAbove={() => {
+                        addRow(contextMenu.row - 1);
+                        setContextMenu(null);
+                    }}
+                    onAddRowBelow={() => {
+                        addRow(contextMenu.row);
+                        setContextMenu(null);
+                    }}
+                    onDeleteRow={() => {
+                        deleteRow(contextMenu.row);
+                        setContextMenu(null);
+                    }}
+                    onAddColumnLeft={() => {
+                        addColumn(contextMenu.col - 1);
+                        setContextMenu(null);
+                    }}
+                    onAddColumnRight={() => {
+                        addColumn(contextMenu.col);
+                        setContextMenu(null);
+                    }}
+                    onDeleteColumn={() => {
+                        deleteColumn(contextMenu.col);
+                        setContextMenu(null);
+                    }}
                 />
             )}
         </div>
