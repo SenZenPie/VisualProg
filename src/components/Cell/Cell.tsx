@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef, useEffect } from 'react';
 import './Cell.css';
 
 interface CellProps {
@@ -6,6 +6,7 @@ interface CellProps {
     col: number;
     value: string;
     isSelected: boolean;
+    isSelectedRange: boolean;
     isEditing: boolean;
     editValue: string;
     onSelect: (row: number, col: number, shiftKey: boolean) => void;
@@ -17,8 +18,6 @@ interface CellProps {
     height: number;
     left: number;
     top: number;
-    scrollLeft: number;
-    scrollTop: number;
 }
 
 const Cell = memo(({
@@ -26,6 +25,7 @@ const Cell = memo(({
     col,
     value,
     isSelected,
+    isSelectedRange,
     isEditing,
     editValue,
     onSelect,
@@ -36,9 +36,7 @@ const Cell = memo(({
     width,
     height,
     left,
-    top,
-    scrollLeft,
-    scrollTop
+    top
 }: CellProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,50 +47,40 @@ const Cell = memo(({
         }
     }, [isEditing]);
 
-    const handleClick = (e: React.MouseEvent) => {
-        onSelect(row, col, e.shiftKey);
-    };
-
-    const handleDoubleClick = () => {
-        onDoubleClick(row, col);
-    };
-
-    const handleContextMenu = (e: React.MouseEvent) => {
-        onContextMenu(e, row, col);
-    };
-
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            onEditComplete();
-        } else if (e.key === 'Escape') {
+        if (e.key === 'Enter' || e.key === 'Escape') {
             onEditComplete();
         }
     };
 
     const style = {
-        width: `${width}px`,
-        height: `${height}px`,
+        width,
+        height,
         position: 'absolute' as const,
-        transform: `translateX(${left - scrollLeft}px) translateY(${top - scrollTop}px)`
+        transform: `translate(${left}px, ${top}px)`,
+        zIndex: isSelected ? 2 : 1
     };
+
+    let className = 'cell';
+    if (isSelected) className += ' selected';
+    else if (isSelectedRange) className += ' in-range';
 
     return (
         <div
-            className={`cell ${isSelected ? 'selected' : ''}`}
+            className={className}
             style={style}
-            onClick={handleClick}
-            onDoubleClick={handleDoubleClick}
-            onContextMenu={handleContextMenu}
+            onClick={(e) => onSelect(row, col, e.shiftKey)}
+            onDoubleClick={() => onDoubleClick(row, col)}
+            onContextMenu={(e) => onContextMenu(e, row, col)}
         >
             {isEditing ? (
                 <input
                     ref={inputRef}
-                    type="text"
+                    className="cell-input"
                     value={editValue}
                     onChange={(e) => onEditChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onBlur={onEditComplete}
-                    className="cell-input"
                 />
             ) : (
                 <div className="cell-content">{value}</div>
@@ -102,5 +90,4 @@ const Cell = memo(({
 });
 
 Cell.displayName = 'Cell';
-
 export default Cell;

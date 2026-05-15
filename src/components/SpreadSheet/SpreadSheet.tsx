@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import FormulaBar from '../FormulaBar/FormulaBar';
 import ContextMenu from '../ContextMenu/ContextMenu';
+import Cell from '../Cell/Cell';
 import { useSpreadsheet } from '../../hooks/useSpreadsheet';
 import './Spreadsheet.css';
 
@@ -8,11 +9,12 @@ const DEFAULT_CELL_WIDTH = 100;
 const DEFAULT_ROW_HEIGHT = 28;
 const HEADER_WIDTH = 45;
 const HEADER_HEIGHT = 28;
+const BUFFER_SIZE = 10;
 
 const Spreadsheet = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [scrollLeft, setScrollLeft] = useState(0);
     const [scrollTop, setScrollTop] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number; col: number } | null>(null);
     const [columnWidths, setColumnWidths] = useState<Record<number, number>>({});
     const [resizingCol, setResizingCol] = useState<number | null>(null);
@@ -20,264 +22,150 @@ const Spreadsheet = () => {
     const [resizeStartWidth, setResizeStartWidth] = useState(0);
     
     const {
-        cells,
-        rows,
-        cols,
-        selectedCell,
-        editingCell,
-        editValue,
-        getCellValue,
-        startEdit,
-        stopEdit,
-        selectCell,
-        setEditValue,
-        addRow,
-        deleteRow,
-        addColumn,
-        deleteColumn
+        cells, rows, cols, selectedCell, selectedRange, editingCell, editValue,
+        getCellValue, startEdit, stopEdit, selectCell, setEditValue,
+        addRow, deleteRow, addColumn, deleteColumn
     } = useSpreadsheet();
 
-    const getColumnWidth = (col: number): number => {
-        return columnWidths[col] || DEFAULT_CELL_WIDTH;
-    };
+    const getColumnWidth = useCallback((col: number) => columnWidths[col] || DEFAULT_CELL_WIDTH, [columnWidths]);
 
-    const getTotalWidth = () => {
-        let total = 0;
+    const columnOffsets = useMemo(() => {
+        const offsets = [0];
+        let current = 0;
         for (let i = 0; i < cols; i++) {
-            total += getColumnWidth(i);
+            current += getColumnWidth(i);
+            offsets.push(current);
         }
-        return total;
-    };
+        return offsets;
+    }, [cols, getColumnWidth]);
+
+    const totalWidth = columnOffsets[cols];
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         setScrollLeft(e.currentTarget.scrollLeft);
         setScrollTop(e.currentTarget.scrollTop);
     };
 
-    const getDisplayValue = (row: number, col: number): string => {
-        const value = getCellValue(row, col);
-        if (value === null) return '';
-        if (typeof value === 'number') return value.toString();
-        if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-        return value;
+    const isCellInRange = (row: number, col: number) => {
+        if (!selectedRange) return false;
+        const { startRow, startCol, endRow, endCol } = selectedRange;
+        return row >= Math.min(startRow, endRow) && row <= Math.max(startRow, endRow) &&
+               col >= Math.min(startCol, endCol) && col <= Math.max(startCol, endCol);
     };
 
-    const getEditValueForCell = (row: number, col: number): string => {
-        const cell = cells[row][col];
-        if (cell.formula !== null) return cell.formula;
-        if (cell.value !== null) return String(cell.value);
-        return '';
-    };
+    const containerHeight = containerRef.current?.clientHeight || 800;
+    const containerWidth = containerRef.current?.clientWidth || 1200;
+    const visibleStartRow = Math.max(0, Math.floor(scrollTop / DEFAULT_ROW_HEIGHT) - BUFFER_SIZE);
+    const visibleEndRow = Math.min(rows, Math.ceil((scrollTop + containerHeight) / DEFAULT_ROW_HEIGHT) + BUFFER_SIZE);
 
-    const handleContextMenu = (e: React.MouseEvent, row: number, col: number) => {
-        e.preventDefault();
-        setContextMenu({ x: e.clientX, y: e.clientY, row, col });
-        selectCell(row, col, false);
-    };
+    let visibleStartCol = 0;
+    while (visibleStartCol < cols && columnOffsets[visibleStartCol + 1] < scrollLeft) visibleStartCol++;
+    visibleStartCol = Math.max(0, visibleStartCol - BUFFER_SIZE);
 
-    const closeContextMenu = () => {
-        setContextMenu(null);
-    };
+    let visibleEndCol = visibleStartCol;
+    while (visibleEndCol < cols && columnOffsets[visibleEndCol] < scrollLeft + containerWidth) visibleEndCol++;
+    visibleEndCol = Math.min(cols, visibleEndCol + BUFFER_SIZE);
 
-    const handleAddRowBelow = () => {
-        if (contextMenu) {
-            addRow(contextMenu.row);
-            closeContextMenu();
-        }
-    };
-
-    const handleDeleteRow = () => {
-        if (contextMenu) {
-            deleteRow(contextMenu.row);
-            closeContextMenu();
-        }
-    };
-
-    const handleAddColumnRight = () => {
-        if (contextMenu) {
-            addColumn(contextMenu.col);
-            closeContextMenu();
-        }
-    };
-
-    const handleDeleteColumn = () => {
-        if (contextMenu) {
-            deleteColumn(contextMenu.col);
-            closeContextMenu();
-        }
-    };
-
-    const handleResizeStart = (col: number, e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setResizingCol(col);
-        setResizeStartX(e.clientX);
-        setResizeStartWidth(getColumnWidth(col));
-    };
-
-    const handleResizeMove = (e: MouseEvent) => {
+    const handleResizeMove = useCallback((e: MouseEvent) => {
         if (resizingCol === null) return;
         const delta = e.clientX - resizeStartX;
-        let newWidth = resizeStartWidth + delta;
-        if (newWidth < 50) newWidth = 50;
-        setColumnWidths(prev => ({ ...prev, [resizingCol]: newWidth }));
-    };
-
-    const handleResizeEnd = () => {
-        setResizingCol(null);
-    };
+        setColumnWidths(prev => ({ ...prev, [resizingCol]: Math.max(50, resizeStartWidth + delta) }));
+    }, [resizingCol, resizeStartX, resizeStartWidth]);
 
     useEffect(() => {
         if (resizingCol !== null) {
+            const end = () => setResizingCol(null);
             document.addEventListener('mousemove', handleResizeMove);
-            document.addEventListener('mouseup', handleResizeEnd);
+            document.addEventListener('mouseup', end);
             return () => {
                 document.removeEventListener('mousemove', handleResizeMove);
-                document.removeEventListener('mouseup', handleResizeEnd);
+                document.removeEventListener('mouseup', end);
             };
         }
-    }, [resizingCol]);
-
-    const totalWidth = getTotalWidth();
+    }, [resizingCol, handleResizeMove]);
 
     return (
         <div className="spreadsheet">
             <FormulaBar
-                value={selectedCell ? getEditValueForCell(selectedCell.row, selectedCell.col) : ''}
-                onChange={(value) => {
-                    if (selectedCell) {
-                        setEditValue(value);
-                    }
-                }}
-                onCommit={() => {
-                    if (selectedCell && editingCell) {
-                        stopEdit();
-                    }
-                }}
+                value={selectedCell ? (cells[selectedCell.row][selectedCell.col].formula || String(cells[selectedCell.row][selectedCell.col].value || '')) : ''}
+                onChange={setEditValue}
+                onCommit={stopEdit}
             />
             
             <div className="spreadsheet-container" ref={containerRef} onScroll={handleScroll}>
-                <div className="spreadsheet-header" style={{ transform: `translateX(-${scrollLeft}px)` }}>
-                    <div className="corner-header" style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }}>
-                    </div>
-                    <div className="col-headers" style={{ width: totalWidth, marginLeft: HEADER_WIDTH }}>
-                        {Array.from({ length: cols }, (_, col) => (
-                            <div
-                                key={col}
-                                className="col-header"
-                                style={{
-                                    width: getColumnWidth(col),
-                                    height: HEADER_HEIGHT,
-                                    left: (() => {
-                                        let left = 0;
-                                        for (let i = 0; i < col; i++) {
-                                            left += getColumnWidth(i);
-                                        }
-                                        return left;
-                                    })(),
-                                    position: 'absolute'
-                                }}
-                            >
-                                {String.fromCharCode(65 + col)}
-                                <div
-                                    className="col-resize-handle"
-                                    onMouseDown={(e) => handleResizeStart(col, e)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <div className="spreadsheet-body" style={{ width: totalWidth + HEADER_WIDTH, height: rows * DEFAULT_ROW_HEIGHT + HEADER_HEIGHT }}>
+                    
+                    <div className="corner-header" style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT }} />
 
-                <div className="spreadsheet-body">
-                    <div className="row-headers" style={{ width: HEADER_WIDTH, transform: `translateY(-${scrollTop}px)` }}>
-                        {Array.from({ length: rows }, (_, row) => (
-                            <div
-                                key={row}
-                                className="row-header"
-                                style={{
-                                    width: HEADER_WIDTH,
-                                    height: DEFAULT_ROW_HEIGHT,
-                                    top: row * DEFAULT_ROW_HEIGHT,
-                                    position: 'absolute'
-                                }}
-                                onContextMenu={(e) => handleContextMenu(e, row, -1)}
-                            >
-                                {row + 1}
-                            </div>
-                        ))}
+                    <div className="col-headers" style={{ left: HEADER_WIDTH, height: HEADER_HEIGHT, width: totalWidth }}>
+                        {Array.from({ length: visibleEndCol - visibleStartCol }, (_, i) => {
+                            const col = visibleStartCol + i;
+                            return (
+                                <div key={col} className="col-header" style={{ width: getColumnWidth(col), height: HEADER_HEIGHT, left: columnOffsets[col], position: 'absolute' }}>
+                                    {String.fromCharCode(65 + col)}
+                                    <div className="col-resize-handle" onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        setResizingCol(col);
+                                        setResizeStartX(e.clientX);
+                                        setResizeStartWidth(getColumnWidth(col));
+                                    }} />
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    <div className="cells-container" style={{ width: totalWidth, marginLeft: HEADER_WIDTH, transform: `translateY(-${scrollTop}px)` }}>
-                        {Array.from({ length: rows }, (_, row) => (
-                            <div key={row} style={{ height: DEFAULT_ROW_HEIGHT, position: 'relative' }}>
-                                {Array.from({ length: cols }, (_, col) => {
-                                    const isEditing = editingCell?.row === row && editingCell?.col === col;
-                                    const isSelected = selectedCell?.row === row && selectedCell?.col === col;
-                                    
-                                    const left = (() => {
-                                        let l = 0;
-                                        for (let c = 0; c < col; c++) {
-                                            l += getColumnWidth(c);
-                                        }
-                                        return l;
-                                    })();
-                                    
-                                    return (
-                                        <div
-                                            key={col}
-                                            className={`cell ${isSelected ? 'selected' : ''}`}
-                                            style={{
-                                                width: getColumnWidth(col),
-                                                height: DEFAULT_ROW_HEIGHT,
-                                                position: 'absolute',
-                                                left: left,
-                                                top: 0,
-                                                borderRight: '1px solid #e0e0e0',
-                                                borderBottom: '1px solid #e0e0e0',
-                                                boxSizing: 'border-box',
-                                                background: 'white'
-                                            }}
-                                            onClick={() => selectCell(row, col, false)}
-                                            onDoubleClick={() => startEdit(row, col)}
-                                            onContextMenu={(e) => handleContextMenu(e, row, col)}
-                                        >
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editValue}
-                                                    autoFocus
-                                                    onChange={(e) => setEditValue(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' || e.key === 'Escape') {
-                                                            stopEdit();
-                                                        }
-                                                    }}
-                                                    onBlur={stopEdit}
-                                                    className="cell-input"
-                                                />
-                                            ) : (
-                                                <div className="cell-content">{getDisplayValue(row, col)}</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
+                    <div className="row-headers" style={{ top: HEADER_HEIGHT, width: HEADER_WIDTH, height: rows * DEFAULT_ROW_HEIGHT }}>
+                        {Array.from({ length: visibleEndRow - visibleStartRow }, (_, i) => {
+                            const row = visibleStartRow + i;
+                            return (
+                                <div key={row} className="row-header" style={{ height: DEFAULT_ROW_HEIGHT, width: HEADER_WIDTH, top: row * DEFAULT_ROW_HEIGHT, position: 'absolute' }}>
+                                    {row + 1}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="cells-container" style={{ left: HEADER_WIDTH, top: HEADER_HEIGHT, position: 'absolute' }}>
+                        {Array.from({ length: visibleEndRow - visibleStartRow }, (_, i) => {
+                            const row = visibleStartRow + i;
+                            return Array.from({ length: visibleEndCol - visibleStartCol }, (_, j) => {
+                                const col = visibleStartCol + j;
+                                const isEditing = editingCell?.row === row && editingCell?.col === col;
+                                return (
+                                    <Cell
+                                        key={`${row}-${col}`}
+                                        row={row} col={col}
+                                        value={isEditing ? editValue : String(getCellValue(row, col) ?? '')}
+                                        isSelected={selectedCell?.row === row && selectedCell?.col === col}
+                                        isSelectedRange={isCellInRange(row, col)}
+                                        isEditing={isEditing}
+                                        editValue={editValue}
+                                        onSelect={selectCell}
+                                        onDoubleClick={startEdit}
+                                        onEditChange={setEditValue}
+                                        onEditComplete={stopEdit}
+                                        onContextMenu={(e, r, c) => setContextMenu({ x: e.clientX, y: e.clientY, row: r, col: c })}
+                                        width={getColumnWidth(col)}
+                                        height={DEFAULT_ROW_HEIGHT}
+                                        left={columnOffsets[col]}
+                                        top={row * DEFAULT_ROW_HEIGHT}
+                                    />
+                                );
+                            });
+                        })}
                     </div>
                 </div>
             </div>
 
             {contextMenu && (
                 <ContextMenu
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={closeContextMenu}
-                    onAddRowAbove={() => {}}
-                    onAddRowBelow={handleAddRowBelow}
-                    onDeleteRow={handleDeleteRow}
-                    onAddColumnLeft={() => {}}
-                    onAddColumnRight={handleAddColumnRight}
-                    onDeleteColumn={handleDeleteColumn}
+                    x={contextMenu.x} y={contextMenu.y}
+                    onClose={() => setContextMenu(null)}
+                    onAddRowBelow={() => { addRow(contextMenu.row); setContextMenu(null); }}
+                    onDeleteRow={() => { deleteRow(contextMenu.row); setContextMenu(null); }}
+                    onAddColumnRight={() => { addColumn(contextMenu.col); setContextMenu(null); }}
+                    onDeleteColumn={() => { deleteColumn(contextMenu.col); setContextMenu(null); }}
+                    onAddRowAbove={() => {}} onAddColumnLeft={() => {}}
                 />
             )}
         </div>

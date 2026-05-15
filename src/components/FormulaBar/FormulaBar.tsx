@@ -41,7 +41,7 @@ const FormulaBar = ({ value, onChange, onCommit }: FormulaBarProps) =>{
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         className="formula-input"
-        placeholder="Введите значение или формулу (начинается с =)..."
+        placeholder="Введите значение или формулу"
       />
     </div>
   );

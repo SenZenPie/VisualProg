@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { Cell, CellValue, Position, Range } from '../types/spreadsheet';
 import { evaluateFormula } from '../utils/formulas';
 
-const ROWS = 100;
+const ROWS = 1000;
 const COLS = 26;
 
 function createEmptyCell(): Cell {
@@ -39,37 +39,37 @@ export function useSpreadsheet() {
         const cell = cellsRef.current[row][col];
         if (cell.formula) {
             const result = evaluateFormula(cell.formula, getCellValue);
-        return result;
+            return result;
         }
-    return cell.value;
+        return cell.value;
     }, []);
 
     const updateCell = useCallback((row: number, col: number, value: CellValue, formula: string | null = null) => {
         setCells(prev => {
-        const newCells = [...prev];
-        newCells[row] = [...prev[row]];
-        newCells[row][col] = {
-            value,
-            formattedValue: value !== null ? String(value) : '',
-            formula
-        };
-        return newCells;
+            const newCells = [...prev];
+            newCells[row] = [...prev[row]];
+            newCells[row][col] = {
+                value,
+                formattedValue: value !== null ? String(value) : '',
+                formula
+            };
+            return newCells;
         });
     }, []);
 
     const setCellFormula = useCallback((row: number, col: number, formula: string) => {
         if (!formula.startsWith('=')) {
-        let parsedValue: CellValue = formula;
-        if (formula === '') parsedValue = null;
-        else if (!isNaN(Number(formula))) parsedValue = Number(formula);
-        else if (formula.toLowerCase() === 'true') parsedValue = true;
-        else if (formula.toLowerCase() === 'false') parsedValue = false;
-        else parsedValue = formula;
-      
-        updateCell(row, col, parsedValue, null);
+            let parsedValue: CellValue = formula;
+            if (formula === '') parsedValue = null;
+            else if (!isNaN(Number(formula))) parsedValue = Number(formula);
+            else if (formula.toLowerCase() === 'true') parsedValue = true;
+            else if (formula.toLowerCase() === 'false') parsedValue = false;
+            else parsedValue = formula;
+          
+            updateCell(row, col, parsedValue, null);
         } else {
-        const result = evaluateFormula(formula, getCellValue);
-        updateCell(row, col, result, formula);
+            const result = evaluateFormula(formula, getCellValue);
+            updateCell(row, col, result, formula);
         }
     }, [updateCell, getCellValue]);
 
@@ -81,66 +81,66 @@ export function useSpreadsheet() {
 
     const stopEdit = useCallback(() => {
         if (editingCell) {
-        setCellFormula(editingCell.row, editingCell.col, editValue);
-        setEditingCell(null);
-        setEditValue('');
+            setCellFormula(editingCell.row, editingCell.col, editValue);
+            setEditingCell(null);
+            setEditValue('');
         }
     }, [editingCell, editValue, setCellFormula]);
 
     const selectCell = useCallback((row: number, col: number, shiftKey: boolean = false) => {
         if (shiftKey && selectedCell) {
-        setSelectedRange({
-            startRow: selectedCell.row,
-            startCol: selectedCell.col,
-            endRow: row,
-            endCol: col
-        });
-        setSelectedCell({ row, col });
+            setSelectedRange({
+                startRow: selectedCell.row,
+                startCol: selectedCell.col,
+                endRow: row,
+                endCol: col
+            });
+            setSelectedCell({ row, col });
         } else {
-        setSelectedCell({ row, col });
-        setSelectedRange(null);
+            setSelectedCell({ row, col });
+            setSelectedRange(null);
         }
     }, [selectedCell]);
 
     const addRow = useCallback((afterRow: number) => {
         setCells(prev => {
-        const newCells = [...prev];
-        const newRow: Cell[] = [];
-        for (let j = 0; j < COLS; j++) {
-            newRow[j] = createEmptyCell();
-        }
-        newCells.splice(afterRow + 1, 0, newRow);
-        return newCells;
+            const newCells = [...prev];
+            const newRow: Cell[] = [];
+            for (let j = 0; j < COLS; j++) {
+                newRow[j] = createEmptyCell();
+            }
+            newCells.splice(afterRow + 1, 0, newRow);
+            return newCells;
         });
     }, []);
 
     const deleteRow = useCallback((row: number) => {
         setCells(prev => {
-        const newCells = [...prev];
-        newCells.splice(row, 1);
-        return newCells;
+            const newCells = [...prev];
+            newCells.splice(row, 1);
+            return newCells;
         });
     }, []);
 
     const addColumn = useCallback((afterCol: number) => {
         setCells(prev => {
-        const newCells = prev.map(row => {
-            const newRow = [...row];
-            newRow.splice(afterCol + 1, 0, createEmptyCell());
-            return newRow;
-        });
-        return newCells;
+            const newCells = prev.map(row => {
+                const newRow = [...row];
+                newRow.splice(afterCol + 1, 0, createEmptyCell());
+                return newRow;
+            });
+            return newCells;
         });
     }, []);
 
     const deleteColumn = useCallback((col: number) => {
         setCells(prev => {
-        const newCells = prev.map(row => {
-            const newRow = [...row];
-            newRow.splice(col, 1);
-            return newRow;
-        });
-        return newCells;
+            const newCells = prev.map(row => {
+                const newRow = [...row];
+                newRow.splice(col, 1);
+                return newRow;
+            });
+            return newCells;
         });
     }, []);
 
