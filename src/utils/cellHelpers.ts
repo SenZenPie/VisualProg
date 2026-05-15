@@ -1,3 +1,5 @@
+//Конвертация координат ячеек
+//Из чисел в стринг ( 0 0 = A1)
 export function cellToID(row: number, col: number): string {
     let colStr = '';
     let c = col;
@@ -8,7 +10,7 @@ export function cellToID(row: number, col: number): string {
     }
     return `${colStr}${row +1}`;
 }
-
+//Из стирнг в числа (A1 = 0 0)
 export function idToCell(id: string): {row: number; col: number} | null{
     const match = id.match(/^([A-Z]+)(\d+)$/);
     if (!match) return null;
@@ -22,7 +24,7 @@ export function idToCell(id: string): {row: number; col: number} | null{
 
     return {row: parseInt(rowStr, 10) - 1, col: col -1};
 }
-
+// Если содержимое ячейки начинается с =, то это функция
 export function isFormula(value: string): boolean{
     return value.startsWith("=");
 }
