@@ -15,6 +15,10 @@ interface CellProps {
     onContextMenu: (e: React.MouseEvent, row: number, col: number) => void;
     width: number;
     height: number;
+    left: number;
+    top: number;
+    scrollLeft: number;
+    scrollTop: number;
 }
 
 const Cell = memo(({
@@ -30,7 +34,11 @@ const Cell = memo(({
     onEditComplete,
     onContextMenu,
     width,
-    height
+    height,
+    left,
+    top,
+    scrollLeft,
+    scrollTop
 }: CellProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,8 +73,7 @@ const Cell = memo(({
         width: `${width}px`,
         height: `${height}px`,
         position: 'absolute' as const,
-        left: `${col * width}px`,
-        top: `${row * height}px`
+        transform: `translateX(${left - scrollLeft}px) translateY(${top - scrollTop}px)`
     };
 
     return (
