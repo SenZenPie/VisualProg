@@ -11,7 +11,13 @@ const HEADER_WIDTH = 45;
 const HEADER_HEIGHT = 28;
 const BUFFER_SIZE = 10;
 
-const Spreadsheet = () => {
+interface SpreadsheetProps {
+    documentId: string;
+}
+
+const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
+    console.log('Document ID:', documentId);
+
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
