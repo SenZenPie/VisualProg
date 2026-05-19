@@ -40,6 +40,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
     const [editValue, setEditValue] = useState<string>('');
     const [docName, setDocName] = useState<string>('');
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cellsRef = useRef(cells);
@@ -59,6 +60,17 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
         }
     }, [documentId, initialRows, initialCols]);
 
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
+
     const rows = cells.length;
     const cols = cells[0]?.length || 0;
 
@@ -68,6 +80,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
         try {
             updateDocumentCells(documentId, cellsRef.current);
             setSaveStatus('saved');
+            setHasUnsavedChanges(false);
         } catch {
             setSaveStatus('error');
         }
@@ -103,6 +116,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
             };
             return newCells;
         });
+        setHasUnsavedChanges(true);
         debouncedSave();
     }, [debouncedSave]);
 
@@ -161,6 +175,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
             newCells.splice(index, 0, newRow);
             return newCells;
         });
+        setHasUnsavedChanges(true);
         debouncedSave();
     }, [cols, debouncedSave]);
 
@@ -170,6 +185,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
             newCells.splice(index, 1);
             return newCells;
         });
+        setHasUnsavedChanges(true);
         debouncedSave();
     }, [debouncedSave]);
 
@@ -182,6 +198,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
             });
             return newCells;
         });
+        setHasUnsavedChanges(true);
         debouncedSave();
     }, [debouncedSave]);
 
@@ -194,6 +211,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
             });
             return newCells;
         });
+        setHasUnsavedChanges(true);
         debouncedSave();
     }, [debouncedSave]);
 
@@ -205,25 +223,26 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
     }, [saveCells]);
 
     return {
-        cells,
-        rows,
-        cols,
-        selectedCell,
-        selectedRange,
-        editingCell,
-        editValue,
-        docName,
-        saveStatus,
-        getCellValue,
-        setCellFormula,
-        startEdit,
-        stopEdit,
-        selectCell,
-        setEditValue,
-        addRow,
-        deleteRow,
-        addColumn,
-        deleteColumn,
-        manualSave
+    cells,
+    rows,
+    cols,
+    selectedCell,
+    selectedRange,
+    editingCell,
+    editValue,
+    docName,
+    saveStatus,
+    getCellValue,
+    setCellFormula,
+    startEdit,
+    stopEdit,
+    selectCell,
+    setEditValue,
+    addRow,
+    deleteRow,
+    addColumn,
+    deleteColumn,
+    manualSave,
+    setCells
     };
 }

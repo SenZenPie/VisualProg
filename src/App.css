@@ -24,6 +24,46 @@
     color: #666;
 }
 
+.export-buttons {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.export-buttons button, .import-btn {
+    padding: 4px 12px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.export-buttons button:hover, .import-btn:hover {
+    background: #e0e0e0;
+}
+
+.save-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.save-status-saved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.save-status-saving {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.save-status-error {
+    background: #ffebee;
+    color: #c62828;
+}
+
 .dashboard {
     padding: 20px;
 }
@@ -186,26 +226,4 @@
 .modal-buttons button[type="submit"] {
     background: #4caf50;
     color: white;
-}
-
-.save-status {
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-left: auto;
-}
-
-.save-status-saved {
-    background: #e8f5e9;
-    color: #2e7d32;
-}
-
-.save-status-saving {
-    background: #fff3e0;
-    color: #ef6c00;
-}
-
-.save-status-error {
-    background: #ffebee;
-    color: #c62828;
 }

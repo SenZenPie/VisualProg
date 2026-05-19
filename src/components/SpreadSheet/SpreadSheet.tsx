@@ -2,7 +2,9 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import FormulaBar from '../FormulaBar/FormulaBar';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import Cell from '../Cell/Cell';
+import type { Cell as CellType } from '../../types/spreadsheet';
 import { useSpreadsheet } from '../../hooks/useSpreadsheet';
+import { exportToCSV, exportToJSON, importFromCSV } from '../../utils/exportUtils';
 import './SpreadSheet.css';
 
 const DEFAULT_CELL_WIDTH = 100;
@@ -29,7 +31,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
     const {
         cells, cols, selectedCell, selectedRange, editingCell, editValue, docName, saveStatus,
         getCellValue, startEdit, stopEdit, selectCell, setEditValue,
-        addRow, deleteRow, addColumn, deleteColumn, manualSave
+        addRow, deleteRow, addColumn, deleteColumn, manualSave, setCells
     } = useSpreadsheet(documentId, 100, 26);
 
     useEffect(() => {
@@ -112,6 +114,29 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
         }
     }, [resizingCol, handleResizeMove]);
 
+    const handleImport = (file: File) => {
+        importFromCSV(file, (data) => {
+            const rows = data.length;
+            const maxCols = Math.max(...data.map(row => row.length));
+            
+            const newCells: CellType[][] = [];
+            for (let i = 0; i < rows; i++) {
+                newCells[i] = [];
+                for (let j = 0; j < maxCols; j++) {
+                    const value = data[i]?.[j] || '';
+                    newCells[i][j] = {
+                        value: value,
+                        formattedValue: value,
+                        formula: null
+                    };
+                }
+            }
+            
+            setCells(newCells);
+            manualSave();
+        });
+    };
+
     const renderedCells = useMemo(() => {
         const viewCells = [];
         const currentEndRow = Math.min(visibleEndRow, cells.length - 1);
@@ -191,6 +216,24 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
             <div className="spreadsheet-toolbar">
                 <button className="back-btn" onClick={onBack}>Назад</button>
                 <div className="document-name">{docName || documentId}</div>
+                <div className="export-buttons">
+                    <button onClick={() => exportToCSV(cells)}>CSV</button>
+                    <button onClick={() => exportToJSON(cells)}>JSON</button>
+                    <label className="import-btn">
+                        Импорт CSV
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                    handleImport(e.target.files[0]);
+                                }
+                                e.target.value = '';
+                            }}
+                            style={{ display: 'none' }}
+                        />
+                    </label>
+                </div>
                 <div className={`save-status save-status-${saveStatus}`}>{getStatusText()}</div>
             </div>
             <FormulaBar
