@@ -187,3 +187,25 @@
     background: #4caf50;
     color: white;
 }
+
+.save-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-left: auto;
+}
+
+.save-status-saved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.save-status-saving {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.save-status-error {
+    background: #ffebee;
+    color: #c62828;
+}

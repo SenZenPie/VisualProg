@@ -27,10 +27,29 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
     const [resizeStartWidth, setResizeStartWidth] = useState(0);
     
     const {
-        cells, cols, selectedCell, selectedRange, editingCell, editValue, docName,
+        cells, cols, selectedCell, selectedRange, editingCell, editValue, docName, saveStatus,
         getCellValue, startEdit, stopEdit, selectCell, setEditValue,
-        addRow, deleteRow, addColumn, deleteColumn
+        addRow, deleteRow, addColumn, deleteColumn, manualSave
     } = useSpreadsheet(documentId, 100, 26);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                manualSave();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [manualSave]);
+
+    const getStatusText = () => {
+        switch (saveStatus) {
+            case 'saving': return 'Сохранение...';
+            case 'error': return 'Ошибка сохранения';
+            default: return 'Сохранено';
+        }
+    };
 
     const getColumnWidth = useCallback((col: number) => columnWidths[col] || DEFAULT_CELL_WIDTH, [columnWidths]);
 
@@ -172,6 +191,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
             <div className="spreadsheet-toolbar">
                 <button className="back-btn" onClick={onBack}>Назад</button>
                 <div className="document-name">{docName || documentId}</div>
+                <div className={`save-status save-status-${saveStatus}`}>{getStatusText()}</div>
             </div>
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}

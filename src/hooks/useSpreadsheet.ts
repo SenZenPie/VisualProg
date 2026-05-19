@@ -3,6 +3,8 @@ import type { Cell, CellValue, Position, Range } from '../types/spreadsheet';
 import { evaluateFormula } from '../utils/formulas';
 import { updateDocumentCells, getDocumentById } from '../services/storageService';
 
+type SaveStatus = 'saved' | 'saving' | 'error';
+
 function createEmptyCell(): Cell {
     return {
         value: null,
@@ -37,6 +39,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
     const [editingCell, setEditingCell] = useState<Position | null>(null);
     const [editValue, setEditValue] = useState<string>('');
     const [docName, setDocName] = useState<string>('');
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
     
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cellsRef = useRef(cells);
@@ -59,9 +62,14 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
     const rows = cells.length;
     const cols = cells[0]?.length || 0;
 
-    const saveCells = useCallback(() => {
-        if (documentId) {
+    const saveCells = useCallback(async () => {
+        if (!documentId) return;
+        setSaveStatus('saving');
+        try {
             updateDocumentCells(documentId, cellsRef.current);
+            setSaveStatus('saved');
+        } catch {
+            setSaveStatus('error');
         }
     }, [documentId]);
 
@@ -189,6 +197,13 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
         debouncedSave();
     }, [debouncedSave]);
 
+    const manualSave = useCallback(() => {
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        saveCells();
+    }, [saveCells]);
+
     return {
         cells,
         rows,
@@ -198,6 +213,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
         editingCell,
         editValue,
         docName,
+        saveStatus,
         getCellValue,
         setCellFormula,
         startEdit,
@@ -207,6 +223,7 @@ export function useSpreadsheet(documentId: string | null, initialRows: number = 
         addRow,
         deleteRow,
         addColumn,
-        deleteColumn
+        deleteColumn,
+        manualSave
     };
 }
