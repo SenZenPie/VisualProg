@@ -1,4 +1,4 @@
-import type { Document, DocumentSummary } from "../types/spreadsheet";
+import type { Document, DocumentSummary, Cell } from '../types/spreadsheet';
 
 const STORAGE_KEY = 'spreadsheet_documents';
 
@@ -28,6 +28,17 @@ export function getDocumentById(id: string): Document | null {
     return docs.find(d => d.id === id) || null;
 }
 
+export function saveDocument(doc: Document): void {
+    const docs = getDocuments();
+    const index = docs.findIndex(d => d.id === doc.id);
+    if (index !== -1) {
+        docs[index] = doc;
+    } else {
+        docs.push(doc);
+    }
+    saveDocuments(docs);
+}
+
 export function createDocument(name: string, rows: number, cols: number): Document {
     const newDoc: Document = {
         id: Date.now().toString(),
@@ -36,22 +47,32 @@ export function createDocument(name: string, rows: number, cols: number): Docume
         updatedAt: new Date().toISOString(),
         rows,
         cols,
-        cells: {},
+        cells: [],
         preview: [['', '', ''], ['', '', ''], ['', '', '']]
     };
     
-    const docs = getDocuments();
-    docs.push(newDoc);
-    saveDocuments(docs);
+    saveDocument(newDoc);
     return newDoc;
 }
 
 export function updateDocument(id: string, updates: Partial<Document>): void {
-    const docs = getDocuments();
-    const index = docs.findIndex(d => d.id === id);
-    if (index !== -1) {
-        docs[index] = { ...docs[index], ...updates, updatedAt: new Date().toISOString() };
-        saveDocuments(docs);
+    const doc = getDocumentById(id);
+    if (doc) {
+        const updated = { ...doc, ...updates, updatedAt: new Date().toISOString() };
+        saveDocument(updated);
+    }
+}
+
+export function updateDocumentCells(id: string, cells: Cell[][]): void {
+    const doc = getDocumentById(id);
+    if (doc) {
+        const preview = [
+            [cells[0]?.[0]?.formattedValue || '', cells[0]?.[1]?.formattedValue || '', cells[0]?.[2]?.formattedValue || ''],
+            [cells[1]?.[0]?.formattedValue || '', cells[1]?.[1]?.formattedValue || '', cells[1]?.[2]?.formattedValue || ''],
+            [cells[2]?.[0]?.formattedValue || '', cells[2]?.[1]?.formattedValue || '', cells[2]?.[2]?.formattedValue || '']
+        ];
+        const updated = { ...doc, cells, preview, updatedAt: new Date().toISOString() };
+        saveDocument(updated);
     }
 }
 
@@ -73,8 +94,6 @@ export function duplicateDocument(id: string): Document | null {
         updatedAt: new Date().toISOString()
     };
     
-    const docs = getDocuments();
-    docs.push(newDoc);
-    saveDocuments(docs);
+    saveDocument(newDoc);
     return newDoc;
 }

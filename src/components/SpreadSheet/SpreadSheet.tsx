@@ -13,11 +13,10 @@ const BUFFER_SIZE = 10;
 
 interface SpreadsheetProps {
     documentId: string;
+    onBack: () => void;
 }
 
-const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
-    console.log('Document ID:', documentId);
-
+const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
@@ -28,10 +27,10 @@ const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
     const [resizeStartWidth, setResizeStartWidth] = useState(0);
     
     const {
-        cells, cols, selectedCell, selectedRange, editingCell, editValue,
+        cells, cols, selectedCell, selectedRange, editingCell, editValue, docName,
         getCellValue, startEdit, stopEdit, selectCell, setEditValue,
         addRow, deleteRow, addColumn, deleteColumn
-    } = useSpreadsheet();
+    } = useSpreadsheet(documentId, 100, 26);
 
     const getColumnWidth = useCallback((col: number) => columnWidths[col] || DEFAULT_CELL_WIDTH, [columnWidths]);
 
@@ -55,8 +54,11 @@ const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
     const isCellInRange = (row: number, col: number) => {
         if (!selectedRange) return false;
         const { startRow, startCol, endRow, endCol } = selectedRange;
-        return row >= Math.min(startRow, endRow) && row <= Math.max(startRow, endRow) &&
-               col >= Math.min(startCol, endCol) && col <= Math.max(startCol, endCol);
+        const minRow = Math.min(startRow, endRow);
+        const maxRow = Math.max(startRow, endRow);
+        const minCol = Math.min(startCol, endCol);
+        const maxCol = Math.max(startCol, endCol);
+        return row >= minRow && row <= maxRow && col >= minCol && col <= maxCol;
     };
 
     const containerHeight = containerRef.current?.clientHeight || 800;
@@ -167,6 +169,10 @@ const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
 
     return (
         <div className="spreadsheet">
+            <div className="spreadsheet-toolbar">
+                <button className="back-btn" onClick={onBack}>Назад</button>
+                <div className="document-name">{docName || documentId}</div>
+            </div>
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}
                 onChange={setEditValue}
@@ -198,11 +204,11 @@ const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
                     y={contextMenu.y}
                     onClose={() => setContextMenu(null)}
                     onAddRowAbove={() => {
-                        addRow(contextMenu.row - 1);
+                        addRow(contextMenu.row);
                         setContextMenu(null);
                     }}
                     onAddRowBelow={() => {
-                        addRow(contextMenu.row);
+                        addRow(contextMenu.row + 1);
                         setContextMenu(null);
                     }}
                     onDeleteRow={() => {
@@ -210,11 +216,11 @@ const Spreadsheet = ({ documentId }: SpreadsheetProps) => {
                         setContextMenu(null);
                     }}
                     onAddColumnLeft={() => {
-                        addColumn(contextMenu.col - 1);
+                        addColumn(contextMenu.col);
                         setContextMenu(null);
                     }}
                     onAddColumnRight={() => {
-                        addColumn(contextMenu.col);
+                        addColumn(contextMenu.col + 1);
                         setContextMenu(null);
                     }}
                     onDeleteColumn={() => {

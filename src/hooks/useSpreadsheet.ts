@@ -1,9 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Cell, CellValue, Position, Range } from '../types/spreadsheet';
 import { evaluateFormula } from '../utils/formulas';
-
-const ROWS = 1000;
-const COLS = 26;
+import { updateDocumentCells, getDocumentById } from '../services/storageService';
 
 function createEmptyCell(): Cell {
     return {
@@ -13,36 +11,78 @@ function createEmptyCell(): Cell {
     };
 }
 
-function initCells(): Cell[][] {
+function initCells(rows: number, cols: number): Cell[][] {
     const cells: Cell[][] = [];
-    for (let i = 0; i < ROWS; i++) {
+    for (let i = 0; i < rows; i++) {
         cells[i] = [];
-        for (let j = 0; j < COLS; j++) {
+        for (let j = 0; j < cols; j++) {
             cells[i][j] = createEmptyCell();
         }
     }
     return cells;
 }
 
-export function useSpreadsheet() {
-    const [cells, setCells] = useState<Cell[][]>(initCells);
+export function useSpreadsheet(documentId: string | null, initialRows: number = 100, initialCols: number = 26) {
+    const [cells, setCells] = useState<Cell[][]>(() => {
+        if (documentId) {
+            const doc = getDocumentById(documentId);
+            if (doc && doc.cells && doc.cells.length > 0) {
+                return doc.cells;
+            }
+        }
+        return initCells(initialRows, initialCols);
+    });
     const [selectedCell, setSelectedCell] = useState<Position | null>(null);
     const [selectedRange, setSelectedRange] = useState<Range | null>(null);
     const [editingCell, setEditingCell] = useState<Position | null>(null);
     const [editValue, setEditValue] = useState<string>('');
-  
+    const [docName, setDocName] = useState<string>('');
+    
+    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cellsRef = useRef(cells);
     cellsRef.current = cells;
 
+    useEffect(() => {
+        if (documentId) {
+            const doc = getDocumentById(documentId);
+            if (doc) {
+                setDocName(doc.name);
+                if (doc.cells && doc.cells.length > 0) {
+                    setCells(doc.cells);
+                } else {
+                    setCells(initCells(doc.rows || initialRows, doc.cols || initialCols));
+                }
+            }
+        }
+    }, [documentId, initialRows, initialCols]);
+
+    const rows = cells.length;
+    const cols = cells[0]?.length || 0;
+
+    const saveCells = useCallback(() => {
+        if (documentId) {
+            updateDocumentCells(documentId, cellsRef.current);
+        }
+    }, [documentId]);
+
+    const debouncedSave = useCallback(() => {
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        saveTimeoutRef.current = setTimeout(() => {
+            saveCells();
+        }, 500);
+    }, [saveCells]);
+
     const getCellValue = useCallback((row: number, col: number): CellValue => {
-        if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return null;
+        if (row < 0 || row >= rows || col < 0 || col >= cols) return null;
         const cell = cellsRef.current[row][col];
         if (cell.formula) {
             const result = evaluateFormula(cell.formula, getCellValue);
             return result;
         }
         return cell.value;
-    }, []);
+    }, [rows, cols]);
 
     const updateCell = useCallback((row: number, col: number, value: CellValue, formula: string | null = null) => {
         setCells(prev => {
@@ -55,7 +95,8 @@ export function useSpreadsheet() {
             };
             return newCells;
         });
-    }, []);
+        debouncedSave();
+    }, [debouncedSave]);
 
     const setCellFormula = useCallback((row: number, col: number, formula: string) => {
         if (!formula.startsWith('=')) {
@@ -102,56 +143,61 @@ export function useSpreadsheet() {
         }
     }, [selectedCell]);
 
-    const addRow = useCallback((afterRow: number) => {
+    const addRow = useCallback((index: number) => {
         setCells(prev => {
             const newCells = [...prev];
             const newRow: Cell[] = [];
-            for (let j = 0; j < COLS; j++) {
+            for (let j = 0; j < cols; j++) {
                 newRow[j] = createEmptyCell();
             }
-            newCells.splice(afterRow + 1, 0, newRow);
+            newCells.splice(index, 0, newRow);
             return newCells;
         });
-    }, []);
+        debouncedSave();
+    }, [cols, debouncedSave]);
 
-    const deleteRow = useCallback((row: number) => {
+    const deleteRow = useCallback((index: number) => {
         setCells(prev => {
             const newCells = [...prev];
-            newCells.splice(row, 1);
+            newCells.splice(index, 1);
             return newCells;
         });
-    }, []);
+        debouncedSave();
+    }, [debouncedSave]);
 
-    const addColumn = useCallback((afterCol: number) => {
+    const addColumn = useCallback((index: number) => {
         setCells(prev => {
             const newCells = prev.map(row => {
                 const newRow = [...row];
-                newRow.splice(afterCol + 1, 0, createEmptyCell());
+                newRow.splice(index, 0, createEmptyCell());
                 return newRow;
             });
             return newCells;
         });
-    }, []);
+        debouncedSave();
+    }, [debouncedSave]);
 
-    const deleteColumn = useCallback((col: number) => {
+    const deleteColumn = useCallback((index: number) => {
         setCells(prev => {
             const newCells = prev.map(row => {
                 const newRow = [...row];
-                newRow.splice(col, 1);
+                newRow.splice(index, 1);
                 return newRow;
             });
             return newCells;
         });
-    }, []);
+        debouncedSave();
+    }, [debouncedSave]);
 
     return {
         cells,
-        rows: ROWS,
-        cols: COLS,
+        rows,
+        cols,
         selectedCell,
         selectedRange,
         editingCell,
         editValue,
+        docName,
         getCellValue,
         setCellFormula,
         startEdit,

@@ -92,7 +92,7 @@ const Dashboard = ({ onOpenDocument }: DashboardProps) => {
                         <div className="document-actions">
                             <button onClick={() => onOpenDocument(doc.id)}>Открыть</button>
                             <button onClick={() => openRenameModal(doc.id, doc.name)}>Переименовать</button>
-                            <button onClick={() => handleDuplicate(doc.id)}>Дублироать</button>
+                            <button onClick={() => handleDuplicate(doc.id)}>Дублировать</button>
                             <button onClick={() => handleDelete(doc.id, doc.name)}>Удалить</button>
                         </div>
                     </div>

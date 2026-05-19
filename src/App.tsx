@@ -7,14 +7,7 @@ function App() {
     const [currentDocId, setCurrentDocId] = useState<string | null>(null);
 
     if (currentDocId) {
-        return (
-            <div className="app">
-                <button className="back-btn" onClick={() => setCurrentDocId(null)}>
-                    Назад
-                </button>
-                <Spreadsheet documentId={currentDocId} />
-            </div>
-        );
+        return <Spreadsheet documentId={currentDocId} onBack={() => setCurrentDocId(null)} />;
     }
 
     return <Dashboard onOpenDocument={setCurrentDocId} />;
