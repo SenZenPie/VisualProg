@@ -1,6 +1,6 @@
 export type CellValue = string | number | boolean | null;
 export interface Cell {
-    value: any;
+    value: CellValue;
     formattedValue: string;
     formula: string | null;
 }
@@ -15,12 +15,21 @@ export interface Range {
     endCol: number;
 }
 
-export interface DocumentItem {
+export interface Document {
     id: string;
-    title: string;
+    name: string;
     createdAt: string;
     updatedAt: string;
-    rowsCount: number;
-    colsCount: number;
-    cells: Cell[][]; // Сами данные таблицы
+    rows: number;
+    cols: number;
+    cells: any;
+    preview?: string[][];
+}
+
+export interface DocumentSummary {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    preview: string[][];
 }

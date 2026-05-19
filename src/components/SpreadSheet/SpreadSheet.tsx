@@ -22,7 +22,7 @@ const Spreadsheet = () => {
     const [resizeStartWidth, setResizeStartWidth] = useState(0);
     
     const {
-        cells, rows, cols, selectedCell, selectedRange, editingCell, editValue,
+        cells, cols, selectedCell, selectedRange, editingCell, editValue,
         getCellValue, startEdit, stopEdit, selectCell, setEditValue,
         addRow, deleteRow, addColumn, deleteColumn
     } = useSpreadsheet();
@@ -170,20 +170,16 @@ const Spreadsheet = () => {
             <div className="spreadsheet-container" ref={containerRef} onScroll={handleScroll}>
                 <div className="spreadsheet-body" style={{ width: totalWidth + HEADER_WIDTH, height: cells.length * DEFAULT_ROW_HEIGHT + HEADER_HEIGHT, position: 'relative' }}>
                     
-                    {/* Угловой блок над строками и под буквами */}
                     <div className="corner-header" style={{ width: HEADER_WIDTH, height: HEADER_HEIGHT, position: 'absolute', top: 0, left: 0, zIndex: 100 }} />
 
-                    {/* Горизонтальная ось: Буквы (A, B, C...) */}
                     <div className="col-headers" style={{ position: 'absolute', top: 0, left: HEADER_WIDTH, height: HEADER_HEIGHT, width: totalWidth, zIndex: 50 }}>
                         {renderedColHeaders}
                     </div>
 
-                    {/* Вертикальная ось: Цифры (1, 2, 3...) */}
                     <div className="row-headers" style={{ position: 'absolute', left: 0, top: HEADER_HEIGHT, width: HEADER_WIDTH, height: cells.length * DEFAULT_ROW_HEIGHT, zIndex: 40 }}>
                         {renderedRowHeaders}
                     </div>
 
-                    {/* Сетка ячеек таблицы */}
                     <div className="cells-container" style={{ left: HEADER_WIDTH, top: HEADER_HEIGHT, position: 'absolute' }}>
                         {renderedCells}
                     </div>
