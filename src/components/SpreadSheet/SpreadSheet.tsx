@@ -4,8 +4,10 @@ import ContextMenu from '../ContextMenu/ContextMenu';
 import Cell from '../Cell/Cell';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateCell, setSelectedCell, setSelectedRange, setEditingCell, setEditValue,addRow,deleteRow,addColumn,deleteColumn,undo,redo} from '../../store/slices/spreadsheetSlice';
+import { setSaveStatus } from '../../store/slices/documentsSlice';
 import { exportToCSV, exportToJSON, importFromCSV } from '../../utils/exportUtils';
 import { evaluateFormula } from '../../utils/formulas';
+import { updateDocumentCells } from '../../services/storageService';
 import type { CellValue, Cell as CellType } from '../../types/spreadsheet';
 import './SpreadSheet.css';
 
@@ -38,6 +40,7 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
     const editValue = useAppSelector((state) => state.spreadsheet.editValue);
     const docName = useAppSelector((state) => state.documents.currentDocument?.name || '');
     const saveStatus = useAppSelector((state) => state.documents.saveStatus);
+    const currentDocId = useAppSelector((state) => state.documents.currentDocId);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,6 +56,17 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [dispatch]);
+
+    useEffect(() => {
+        if (!currentDocId) return;
+        
+        const timeout = setTimeout(() => {
+            updateDocumentCells(currentDocId, cells);
+            dispatch(setSaveStatus('saved'));
+        }, 500);
+        
+        return () => clearTimeout(timeout);
+    }, [cells, currentDocId, dispatch]);
 
     const getCellValue = useCallback((row: number, col: number): CellValue => {
         if (row < 0 || row >= cells.length || col < 0 || col >= cells[0]?.length) return null;
@@ -73,6 +87,8 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
     };
 
     const handleSetCellFormula = (row: number, col: number, formula: string) => {
+        dispatch(setSaveStatus('saving'));
+        
         if (!formula.startsWith('=')) {
             let parsedValue: CellValue = formula;
             if (formula === '') parsedValue = null;
