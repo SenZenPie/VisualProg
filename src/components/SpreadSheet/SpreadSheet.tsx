@@ -2,9 +2,11 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import FormulaBar from '../FormulaBar/FormulaBar';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import Cell from '../Cell/Cell';
-import type { Cell as CellType } from '../../types/spreadsheet';
-import { useSpreadsheet } from '../../hooks/useSpreadsheet';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { updateCell, setSelectedCell, setSelectedRange, setEditingCell, setEditValue,addRow,deleteRow,addColumn,deleteColumn,undo,redo} from '../../store/slices/spreadsheetSlice';
 import { exportToCSV, exportToJSON, importFromCSV } from '../../utils/exportUtils';
+import { evaluateFormula } from '../../utils/formulas';
+import type { CellValue, Cell as CellType } from '../../types/spreadsheet';
 import './SpreadSheet.css';
 
 const DEFAULT_CELL_WIDTH = 100;
@@ -14,11 +16,11 @@ const HEADER_HEIGHT = 28;
 const BUFFER_SIZE = 10;
 
 interface SpreadsheetProps {
-    documentId: string;
     onBack: () => void;
 }
 
-const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
+const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
+    const dispatch = useAppDispatch();
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
@@ -28,22 +30,102 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
     const [resizeStartX, setResizeStartX] = useState(0);
     const [resizeStartWidth, setResizeStartWidth] = useState(0);
     
-    const {
-        cells, cols, selectedCell, selectedRange, editingCell, editValue, docName, saveStatus,
-        getCellValue, startEdit, stopEdit, selectCell, setEditValue,
-        addRow, deleteRow, addColumn, deleteColumn, manualSave, setCells
-    } = useSpreadsheet(documentId, 100, 26);
+    const cells = useAppSelector((state) => state.spreadsheet.cells);
+    const cols = useAppSelector((state) => state.spreadsheet.cols);
+    const selectedCell = useAppSelector((state) => state.spreadsheet.selectedCell);
+    const selectedRange = useAppSelector((state) => state.spreadsheet.selectedRange);
+    const editingCell = useAppSelector((state) => state.spreadsheet.editingCell);
+    const editValue = useAppSelector((state) => state.spreadsheet.editValue);
+    const docName = useAppSelector((state) => state.documents.currentDocument?.name || '');
+    const saveStatus = useAppSelector((state) => state.documents.saveStatus);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
                 e.preventDefault();
-                manualSave();
+                dispatch(undo());
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                e.preventDefault();
+                dispatch(redo());
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [manualSave]);
+    }, [dispatch]);
+
+    const getCellValue = useCallback((row: number, col: number): CellValue => {
+        if (row < 0 || row >= cells.length || col < 0 || col >= cells[0]?.length) return null;
+        const cell = cells[row]?.[col];
+        if (cell?.formula) {
+            const result = evaluateFormula(cell.formula, getCellValue);
+            return result;
+        }
+        return cell?.value || null;
+    }, [cells]);
+
+    const getDisplayValue = (row: number, col: number): string => {
+        const value = getCellValue(row, col);
+        if (value === null) return '';
+        if (typeof value === 'number') return value.toString();
+        if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+        return value;
+    };
+
+    const handleSetCellFormula = (row: number, col: number, formula: string) => {
+        if (!formula.startsWith('=')) {
+            let parsedValue: CellValue = formula;
+            if (formula === '') parsedValue = null;
+            else if (!isNaN(Number(formula))) parsedValue = Number(formula);
+            else if (formula.toLowerCase() === 'true') parsedValue = true;
+            else if (formula.toLowerCase() === 'false') parsedValue = false;
+            else parsedValue = formula;
+            
+            const newCell: CellType = {
+                value: parsedValue,
+                formattedValue: parsedValue !== null ? String(parsedValue) : '',
+                formula: null
+            };
+            dispatch(updateCell({ row, col, value: newCell }));
+        } else {
+            const result = evaluateFormula(formula, getCellValue);
+            const newCell: CellType = {
+                value: result,
+                formattedValue: result !== null ? String(result) : '',
+                formula: formula
+            };
+            dispatch(updateCell({ row, col, value: newCell }));
+        }
+    };
+
+    const startEdit = (row: number, col: number) => {
+        const cell = cells[row]?.[col];
+        dispatch(setEditingCell({ row, col }));
+        dispatch(setEditValue(cell?.formula !== null ? cell?.formula || '' : (cell?.value !== null ? String(cell.value) : '')));
+    };
+
+    const stopEdit = () => {
+        if (editingCell) {
+            handleSetCellFormula(editingCell.row, editingCell.col, editValue);
+            dispatch(setEditingCell(null));
+            dispatch(setEditValue(''));
+        }
+    };
+
+    const selectCell = (row: number, col: number, shiftKey: boolean = false) => {
+        if (shiftKey && selectedCell) {
+            dispatch(setSelectedRange({
+                startRow: selectedCell.row,
+                startCol: selectedCell.col,
+                endRow: row,
+                endCol: col
+            }));
+            dispatch(setSelectedCell({ row, col }));
+        } else {
+            dispatch(setSelectedCell({ row, col }));
+            dispatch(setSelectedRange(null));
+        }
+    };
 
     const getStatusText = () => {
         switch (saveStatus) {
@@ -119,21 +201,35 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
             const rows = data.length;
             const maxCols = Math.max(...data.map(row => row.length));
             
-            const newCells: CellType[][] = [];
             for (let i = 0; i < rows; i++) {
-                newCells[i] = [];
                 for (let j = 0; j < maxCols; j++) {
                     const value = data[i]?.[j] || '';
-                    newCells[i][j] = {
-                        value: value,
-                        formattedValue: value,
-                        formula: null
-                    };
+                    let newCell: CellType;
+                    if (value.startsWith('=')) {
+                        newCell = {
+                            value: null,
+                            formattedValue: '',
+                            formula: value
+                        };
+                    } else {
+                        const num = parseFloat(value);
+                        if (!isNaN(num) && value !== '') {
+                            newCell = {
+                                value: num,
+                                formattedValue: value,
+                                formula: null
+                            };
+                        } else {
+                            newCell = {
+                                value: value,
+                                formattedValue: value,
+                                formula: null
+                            };
+                        }
+                    }
+                    dispatch(updateCell({ row: i, col: j, value: newCell }));
                 }
             }
-            
-            setCells(newCells);
-            manualSave();
         });
     };
 
@@ -142,14 +238,9 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
         const currentEndRow = Math.min(visibleEndRow, cells.length - 1);
         
         for (let row = visibleStartRow; row <= currentEndRow; row++) {
-            const rowCells = cells[row];
-            if (!rowCells) continue;
-            
-            const currentEndCol = Math.min(visibleEndCol, rowCells.length - 1);
-            for (let col = visibleStartCol; col <= currentEndCol; col++) {
+            for (let col = visibleStartCol; col <= visibleEndCol; col++) {
                 const isEditing = editingCell?.row === row && editingCell?.col === col;
-                const cellValue = getCellValue(row, col);
-                const displayValue = cellValue === null ? '' : String(cellValue);
+                const displayValue = getDisplayValue(row, col);
                 
                 viewCells.push(
                     <Cell
@@ -163,7 +254,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
                         editValue={editValue}
                         onSelect={selectCell}
                         onDoubleClick={() => startEdit(row, col)}
-                        onEditChange={setEditValue}
+                        onEditChange={(val) => dispatch(setEditValue(val))}
                         onEditComplete={stopEdit}
                         onContextMenu={(e, r, c) => {
                             e.preventDefault();
@@ -178,7 +269,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
             }
         }
         return viewCells;
-    }, [visibleStartRow, visibleEndRow, visibleStartCol, visibleEndCol, editingCell, selectedCell, selectedRange, editValue, columnWidths, columnOffsets, getCellValue, cells]);
+    }, [visibleStartRow, visibleEndRow, visibleStartCol, visibleEndCol, editingCell, selectedCell, selectedRange, editValue, columnWidths, columnOffsets, cells, getDisplayValue]);
 
     const renderedRowHeaders = useMemo(() => {
         const headers = [];
@@ -215,7 +306,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
         <div className="spreadsheet">
             <div className="spreadsheet-toolbar">
                 <button className="back-btn" onClick={onBack}>Назад</button>
-                <div className="document-name">{docName || documentId}</div>
+                <div className="document-name">{docName}</div>
                 <div className="export-buttons">
                     <button onClick={() => exportToCSV(cells)}>CSV</button>
                     <button onClick={() => exportToJSON(cells)}>JSON</button>
@@ -238,7 +329,7 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
             </div>
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}
-                onChange={setEditValue}
+                onChange={(val) => dispatch(setEditValue(val))}
                 onCommit={stopEdit}
             />
             
@@ -267,27 +358,27 @@ const Spreadsheet = ({ documentId, onBack }: SpreadsheetProps) => {
                     y={contextMenu.y}
                     onClose={() => setContextMenu(null)}
                     onAddRowAbove={() => {
-                        addRow(contextMenu.row);
+                        dispatch(addRow(contextMenu.row));
                         setContextMenu(null);
                     }}
                     onAddRowBelow={() => {
-                        addRow(contextMenu.row + 1);
+                        dispatch(addRow(contextMenu.row + 1));
                         setContextMenu(null);
                     }}
                     onDeleteRow={() => {
-                        deleteRow(contextMenu.row);
+                        dispatch(deleteRow(contextMenu.row));
                         setContextMenu(null);
                     }}
                     onAddColumnLeft={() => {
-                        addColumn(contextMenu.col);
+                        dispatch(addColumn(contextMenu.col));
                         setContextMenu(null);
                     }}
                     onAddColumnRight={() => {
-                        addColumn(contextMenu.col + 1);
+                        dispatch(addColumn(contextMenu.col + 1));
                         setContextMenu(null);
                     }}
                     onDeleteColumn={() => {
-                        deleteColumn(contextMenu.col);
+                        dispatch(deleteColumn(contextMenu.col));
                         setContextMenu(null);
                     }}
                 />

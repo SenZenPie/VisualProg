@@ -8,6 +8,7 @@ interface DocumentsState {
     currentDocId: string | null;
     loading: boolean;
     error: string | null;
+    saveStatus: 'saved' | 'saving' | 'error';
 }
 
 const initialState: DocumentsState = {
@@ -15,7 +16,8 @@ const initialState: DocumentsState = {
     currentDocument: null,
     currentDocId: null,
     loading: false,
-    error: null
+    error: null,
+    saveStatus: 'saved'
 };
 
 const documentsSlice = createSlice({
@@ -54,6 +56,9 @@ const documentsSlice = createSlice({
         },
         setError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
+        },
+        setSaveStatus: (state, action: PayloadAction<'saved' | 'saving' | 'error'>) => {
+            state.saveStatus = action.payload;
         }
     }
 });
@@ -66,7 +71,8 @@ export const {
     updateDocumentInList,
     removeDocument,
     setLoading,
-    setError
+    setError,
+    setSaveStatus
 } = documentsSlice.actions;
 
 export default documentsSlice.reducer;

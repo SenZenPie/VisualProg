@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useAppSelector, useAppDispatch } from './store/hooks';
+import { setCurrentDocId } from './store/slices/documentsSlice';
 import Spreadsheet from './components/SpreadSheet/SpreadSheet';
 import Dashboard from './components/Dashboard';
 import './App.css';
 
 function App() {
-    const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+    const currentDocId = useAppSelector((state) => state.documents.currentDocId);
+    const dispatch = useAppDispatch();
 
     if (currentDocId) {
-        return <Spreadsheet documentId={currentDocId} onBack={() => setCurrentDocId(null)} />;
+        return (
+            <div className="app">
+                <Spreadsheet onBack={() => dispatch(setCurrentDocId(null))} />
+            </div>
+        );
     }
 
-    return <Dashboard onOpenDocument={setCurrentDocId} />;
+    return <Dashboard />;
 }
 
 export default App;
