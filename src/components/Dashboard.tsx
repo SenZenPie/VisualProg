@@ -12,6 +12,9 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isDashboard = location.pathname === '/dashboard';
+    
+    const userId = useAppSelector((state) => state.auth?.user?.id || 'default-user-id');
+    
     const documents = useAppSelector((state) => state.documents.list);
     const showCreateModal = useAppSelector((state) => state.ui.showCreateModal);
     const showRenameModal = useAppSelector((state) => state.ui.showRenameModal);
@@ -19,19 +22,21 @@ const Dashboard = () => {
     const selectedDocName = useAppSelector((state) => state.ui.selectedDocName);
 
     const loadDocuments = () => {
-        const docs = getDocumentsList();
+        const docs = getDocumentsList(userId);
         dispatch(setDocumentsList(docs));
     };
 
     useEffect(() => {
         loadDocuments();
-    }, []);
+    }, [userId]);
 
     const handleCreate = (name: string, rows: number, cols: number) => {
-        const newDoc = createDocument(name, rows, cols);
+        const newDoc = createDocument(name, userId, rows, cols);
         const preview = newDoc.preview || [['', '', ''], ['', '', ''], ['', '', '']];
+        
         dispatch(addDocument({
             id: newDoc.id,
+            userId: userId,
             name: newDoc.name,
             createdAt: newDoc.createdAt,
             updatedAt: newDoc.updatedAt,
@@ -46,7 +51,7 @@ const Dashboard = () => {
 
     const handleRename = (newName: string) => {
         if (selectedDocId) {
-            updateDocument(selectedDocId, { name: newName });
+            updateDocument(selectedDocId, userId, { name: newName });
             dispatch(updateDocumentInList({ id: selectedDocId, name: newName }));
             dispatch(closeRenameModal());
         }
@@ -54,17 +59,18 @@ const Dashboard = () => {
 
     const handleDelete = (id: string, name: string) => {
         if (confirm(`Удалить документ "${name}"?`)) {
-            deleteDocument(id);
+            deleteDocument(id, userId);
             dispatch(removeDocument(id));
         }
     };
 
     const handleDuplicate = (id: string) => {
-        const newDoc = duplicateDocument(id);
+        const newDoc = duplicateDocument(id, userId);
         if (newDoc) {
             const preview = newDoc.preview || [['', '', ''], ['', '', ''], ['', '', '']];
             dispatch(addDocument({
                 id: newDoc.id,
+                userId: userId,
                 name: newDoc.name,
                 createdAt: newDoc.createdAt,
                 updatedAt: newDoc.updatedAt,
