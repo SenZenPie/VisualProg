@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setDocumentsList, setCurrentDocId, addDocument, updateDocumentInList, removeDocument } from '../store/slices/documentsSlice';
 import { openCreateModal, openRenameModal, closeCreateModal, closeRenameModal } from '../store/slices/uiSlice';
@@ -8,6 +9,7 @@ import RenameModal from './RenameModal';
 
 const Dashboard = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const documents = useAppSelector((state) => state.documents.list);
     const showCreateModal = useAppSelector((state) => state.ui.showCreateModal);
     const showRenameModal = useAppSelector((state) => state.ui.showRenameModal);
@@ -68,6 +70,7 @@ const Dashboard = () => {
 
     const handleOpenDocument = (id: string) => {
         dispatch(setCurrentDocId(id));
+        navigate(`/documents/${id}`);
     };
 
     const formatDate = (dateStr: string) => {

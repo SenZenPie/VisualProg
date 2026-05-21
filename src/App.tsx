@@ -1,22 +1,22 @@
-import { useAppSelector, useAppDispatch } from './store/hooks';
-import { setCurrentDocId } from './store/slices/documentsSlice';
-import Spreadsheet from './components/SpreadSheet/SpreadSheet';
-import Dashboard from './components/Dashboard';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import DashboardPage from './pages/DashboardPage';
+import SpreadsheetPage from './pages/SpreadsheetPage';
+import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 function App() {
-    const currentDocId = useAppSelector((state) => state.documents.currentDocId);
-    const dispatch = useAppDispatch();
-
-    if (currentDocId) {
-        return (
-            <div className="app">
-                <Spreadsheet onBack={() => dispatch(setCurrentDocId(null))} />
-            </div>
-        );
-    }
-
-    return <Dashboard />;
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/documents/:documentId" element={<SpreadsheetPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;
