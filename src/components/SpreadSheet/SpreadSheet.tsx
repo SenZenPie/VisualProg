@@ -10,6 +10,7 @@ import { exportToCSV, exportToJSON, importFromCSV } from '../../utils/exportUtil
 import { evaluateFormula } from '../../utils/formulas';
 import { updateDocumentCells } from '../../services/storageService';
 import type { CellValue, Cell as CellType } from '../../types/spreadsheet';
+import Toolbar from '../Toolbar/Toolbar';
 import './SpreadSheet.css';
 
 const DEFAULT_CELL_WIDTH = 100;
@@ -367,6 +368,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                 </div>
                 <div className={`save-status save-status-${saveStatus}`}>{getStatusText()}</div>
             </div>
+            <Toolbar />
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}
                 onChange={(val) => dispatch(setEditValue(val))}
