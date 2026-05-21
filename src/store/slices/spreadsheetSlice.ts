@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Cell, Position, Range } from '../../types/spreadsheet';
+import type { Cell, Position, Range, CellStyle } from '../../types/spreadsheet';
 
 const createEmptyCell = (): Cell => ({
     value: null,
@@ -72,6 +72,14 @@ const spreadsheetSlice = createSlice({
                 state.cells[row][col] = value;
             }
         },
+        updateCellStyle: (state, action: PayloadAction<{ row: number; col: number; style: Partial<CellStyle> }>) => {
+            state.history.past.push(JSON.parse(JSON.stringify(state.cells)));
+            state.history.future = [];
+            const { row, col, style } = action.payload;
+            if (state.cells[row] && state.cells[row][col]) {
+                state.cells[row][col].style = { ...state.cells[row][col].style, ...style };
+            }
+        },
         setSelectedCell: (state, action: PayloadAction<Position | null>) => {
             state.selectedCell = action.payload;
         },
@@ -138,6 +146,7 @@ const spreadsheetSlice = createSlice({
 export const {
     setCells,
     updateCell,
+    updateCellStyle,
     setSelectedCell,
     setSelectedRange,
     setEditingCell,

@@ -4,12 +4,12 @@ import FormulaBar from '../FormulaBar/FormulaBar';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import Cell from '../Cell/Cell';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { updateCell, setSelectedCell, setSelectedRange, setEditingCell, setEditValue,addRow,deleteRow,addColumn,deleteColumn,undo,redo} from '../../store/slices/spreadsheetSlice';
+import { updateCell, updateCellStyle, setSelectedCell, setSelectedRange, setEditingCell, setEditValue,addRow,deleteRow,addColumn,deleteColumn,undo,redo} from '../../store/slices/spreadsheetSlice';
 import { setSaveStatus } from '../../store/slices/documentsSlice';
 import { exportToCSV, exportToJSON, importFromCSV } from '../../utils/exportUtils';
 import { evaluateFormula } from '../../utils/formulas';
 import { updateDocumentCells } from '../../services/storageService';
-import type { CellValue, Cell as CellType } from '../../types/spreadsheet';
+import type { CellValue, Cell as CellType, CellStyle } from '../../types/spreadsheet';
 import Toolbar from '../Toolbar/Toolbar';
 import './SpreadSheet.css';
 
@@ -44,6 +44,43 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const currentDocId = useAppSelector((state) => state.documents.currentDocId);
     const hasUnsavedChanges = saveStatus === 'saving';
 
+    const applyStyleToSelected = (style: Partial<CellStyle>) => {
+        if (selectedCell) {
+            dispatch(updateCellStyle({
+                row: selectedCell.row,
+                col: selectedCell.col,
+                style
+            }));
+        }
+    };
+
+    const toggleBold = () => {
+        if (selectedCell) {
+            const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
+            applyStyleToSelected({ bold: !currentStyle?.bold });
+        }
+    };
+
+    const toggleItalic = () => {
+        if (selectedCell) {
+            const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
+            applyStyleToSelected({ italic: !currentStyle?.italic });
+        }
+    };
+
+    const toggleUnderline = () => {
+        if (selectedCell) {
+            const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
+            applyStyleToSelected({ underline: !currentStyle?.underline });
+        }
+    };
+
+    const handleAlignLeft = () => applyStyleToSelected({ align: 'left' });
+    const handleAlignCenter = () => applyStyleToSelected({ align: 'center' });
+    const handleAlignRight = () => applyStyleToSelected({ align: 'right' });
+    const handleTextColor = (color: string) => applyStyleToSelected({ textColor: color });
+    const handleBgColor = (color: string) => applyStyleToSelected({ bgColor: color });
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -53,6 +90,18 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
                 e.preventDefault();
                 dispatch(redo());
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                toggleBold();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+                e.preventDefault();
+                toggleItalic();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                toggleUnderline();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -418,7 +467,16 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                 </div>
                 <div className={`save-status save-status-${saveStatus}`}>{getStatusText()}</div>
             </div>
-            <Toolbar />
+            <Toolbar
+                onBold={toggleBold}
+                onItalic={toggleItalic}
+                onUnderline={toggleUnderline}
+                onAlignLeft={handleAlignLeft}
+                onAlignCenter={handleAlignCenter}
+                onAlignRight={handleAlignRight}
+                onTextColor={handleTextColor}
+                onBgColor={handleBgColor}
+            />
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}
                 onChange={(val) => dispatch(setEditValue(val))}

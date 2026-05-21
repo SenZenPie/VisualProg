@@ -4,6 +4,7 @@ import { useAppDispatch } from '../store/hooks';
 import { setCurrentDocId, setCurrentDocument, setDocumentsList } from '../store/slices/documentsSlice';
 import { setCells } from '../store/slices/spreadsheetSlice';
 import { getDocumentById, getDocumentsList } from '../services/storageService';
+import type { Cell } from '../types/spreadsheet';
 import Spreadsheet from '../components/SpreadSheet/SpreadSheet';
 
 const SpreadsheetPage = () => {
@@ -32,6 +33,30 @@ const SpreadsheetPage = () => {
         
         if (doc.cells && doc.cells.length > 0) {
             dispatch(setCells(doc.cells));
+        } else {
+            const initCells = (rows: number, cols: number): Cell[][] => {
+                const newCells: Cell[][] = [];
+                for (let i = 0; i < rows; i++) {
+                    newCells[i] = [];
+                    for (let j = 0; j < cols; j++) {
+                        newCells[i][j] = {
+                            value: null,
+                            formattedValue: '',
+                            formula: null,
+                            style: {
+                                bold: false,
+                                italic: false,
+                                underline: false,
+                                textColor: '#000000',
+                                bgColor: '#ffffff',
+                                align: 'left'
+                            }
+                        };
+                    }
+                }
+                return newCells;
+            };
+            dispatch(setCells(initCells(doc.rows, doc.cols)));
         }
         
         setLoading(false);

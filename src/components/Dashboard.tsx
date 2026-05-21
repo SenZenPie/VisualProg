@@ -37,8 +37,11 @@ const Dashboard = () => {
             updatedAt: newDoc.updatedAt,
             preview: preview
         }));
-        dispatch(setCurrentDocId(newDoc.id));
         dispatch(closeCreateModal());
+        setTimeout(() => {
+            dispatch(setCurrentDocId(newDoc.id));
+            navigate(`/documents/${newDoc.id}`);
+        }, 0);
     };
 
     const handleRename = (newName: string) => {

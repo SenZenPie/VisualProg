@@ -1,30 +1,51 @@
 import './Toolbar.css';
 
-const Toolbar = () => {
+interface ToolbarProps {
+    onBold: () => void;
+    onItalic: () => void;
+    onUnderline: () => void;
+    onAlignLeft: () => void;
+    onAlignCenter: () => void;
+    onAlignRight: () => void;
+    onTextColor: (color: string) => void;
+    onBgColor: (color: string) => void;
+}
+
+const Toolbar = ({
+    onBold,
+    onItalic,
+    onUnderline,
+    onAlignLeft,
+    onAlignCenter,
+    onAlignRight,
+    onTextColor,
+    onBgColor
+}: ToolbarProps) => {
     return (
         <div className="toolbar">
             <div className="toolbar-group">
-                <button title="Жирный">B</button>
-                <button title="Курсив">I</button>
-                <button title="Подчёркивание">U</button>
+                <button onClick={onBold} title="Жирный (Ctrl+B)">B</button>
+                <button onClick={onItalic} title="Курсив (Ctrl+I)">I</button>
+                <button onClick={onUnderline} title="Подчёркивание (Ctrl+U)">U</button>
             </div>
             <div className="toolbar-divider"></div>
             <div className="toolbar-group">
-                <button title="Выровнять влево">L</button>
-                <button title="Выровнять по центру">C</button>
-                <button title="Выровнять вправо">R</button>
+                <button onClick={onAlignLeft} title="Выровнять влево">≡</button>
+                <button onClick={onAlignCenter} title="Выровнять по центру">≣</button>
+                <button onClick={onAlignRight} title="Выровнять вправо">Ξ</button>
             </div>
             <div className="toolbar-divider"></div>
             <div className="toolbar-group">
-                <input type="color" title="Цвет текста" />
-                <input type="color" title="Цвет фона" />
-            </div>
-            <div className="toolbar-divider"></div>
-            <div className="toolbar-group">
-                <button title="Число">123</button>
-                <button title="Процент">%</button>
-                <button title="Валюта">$</button>
-                <button title="Дата"></button>
+                <input
+                    type="color"
+                    onChange={(e) => onTextColor(e.target.value)}
+                    title="Цвет текста"
+                />
+                <input
+                    type="color"
+                    onChange={(e) => onBgColor(e.target.value)}
+                    title="Цвет фона"
+                />
             </div>
         </div>
     );
