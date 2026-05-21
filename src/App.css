@@ -227,3 +227,26 @@
     background: #4caf50;
     color: white;
 }
+
+.profile-info {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.profile-info p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-right: 20px;
+    color: #3498db;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setDocumentsList, setCurrentDocId, addDocument, updateDocumentInList, removeDocument } from '../store/slices/documentsSlice';
 import { openCreateModal, openRenameModal, closeCreateModal, closeRenameModal } from '../store/slices/uiSlice';
@@ -10,6 +10,8 @@ import RenameModal from './RenameModal';
 const Dashboard = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isDashboard = location.pathname === '/dashboard';
     const documents = useAppSelector((state) => state.documents.list);
     const showCreateModal = useAppSelector((state) => state.ui.showCreateModal);
     const showRenameModal = useAppSelector((state) => state.ui.showRenameModal);
@@ -80,6 +82,9 @@ const Dashboard = () => {
     return (
         <div className="dashboard">
             <div className="dashboard-header">
+                {!isDashboard && (
+                    <Link to="/dashboard" className="back-link">← Назад к документам</Link>
+                )}
                 <h1>Мои документы</h1>
                 <button className="create-btn" onClick={() => dispatch(openCreateModal())}>
                     + Новый документ

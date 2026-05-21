@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import FormulaBar from '../FormulaBar/FormulaBar';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import Cell from '../Cell/Cell';
@@ -41,6 +42,7 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
     const docName = useAppSelector((state) => state.documents.currentDocument?.name || '');
     const saveStatus = useAppSelector((state) => state.documents.saveStatus);
     const currentDocId = useAppSelector((state) => state.documents.currentDocId);
+    const hasUnsavedChanges = saveStatus === 'saving';
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,6 +69,17 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
         
         return () => clearTimeout(timeout);
     }, [cells, currentDocId, dispatch]);
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
     const getCellValue = useCallback((row: number, col: number): CellValue => {
         if (row < 0 || row >= cells.length || col < 0 || col >= cells[0]?.length) return null;
@@ -148,6 +161,16 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
             case 'saving': return 'Сохранение...';
             case 'error': return 'Ошибка сохранения';
             default: return 'Сохранено';
+        }
+    };
+
+    const handleBackWithCheck = () => {
+        if (hasUnsavedChanges) {
+            if (window.confirm('У вас есть несохранённые изменения. Вы уверены, что хотите выйти?')) {
+                onBack();
+            }
+        } else {
+            onBack();
         }
     };
 
@@ -321,7 +344,7 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
     return (
         <div className="spreadsheet">
             <div className="spreadsheet-toolbar">
-                <button className="back-btn" onClick={onBack}>Назад</button>
+                <Link to="/dashboard" className="back-btn">← Мои документы</Link>
                 <div className="document-name">{docName}</div>
                 <div className="export-buttons">
                     <button onClick={() => exportToCSV(cells)}>CSV</button>
