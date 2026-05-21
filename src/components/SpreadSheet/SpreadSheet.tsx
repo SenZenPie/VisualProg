@@ -333,7 +333,19 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     return (
         <div className="spreadsheet">
             <div className="spreadsheet-toolbar">
-                <Link to="/dashboard" className="back-btn">← Мои документы</Link>
+                <Link 
+                    to="/dashboard" 
+                    className="back-btn"
+                    onClick={(e) => {
+                        if (hasUnsavedChanges) {
+                            if (!window.confirm('У вас есть несохранённые изменения. Вы уверены, что хотите выйти?')) {
+                                e.preventDefault();
+                            }
+                        }
+                    }}
+                >
+                    ← Мои документы
+                </Link>
                 <div className="document-name">{docName}</div>
                 <div className="export-buttons">
                     <button onClick={() => exportToCSV(cells)}>CSV</button>
