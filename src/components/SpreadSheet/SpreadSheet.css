@@ -1,0 +1,75 @@
+.spreadsheet-container *, 
+.spreadsheet-container *::before, 
+.spreadsheet-container *::after {
+    box-sizing: border-box;
+}
+
+.spreadsheet {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.spreadsheet-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    background: #ffffff;
+}
+
+.corner-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background: #f8f9fa;
+    border-right: 1px solid #d1d1d1;
+    border-bottom: 1px solid #d1d1d1;
+}
+
+.col-headers {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #f8f9fa;
+}
+
+.col-header {
+    border-right: 1px solid #d1d1d1;
+    border-bottom: 1px solid #d1d1d1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background: #f8f9fa;
+}
+
+.row-headers {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+}
+
+.row-header {
+    border-right: 1px solid #d1d1d1;
+    border-bottom: 1px solid #d1d1d1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    background: #f8f9fa;
+}
+
+.col-resize-handle {
+    position: absolute;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+}
+
+.col-resize-handle:hover {
+    background: #2196f3;
+}
