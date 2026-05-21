@@ -19,10 +19,9 @@ const HEADER_HEIGHT = 28;
 const BUFFER_SIZE = 10;
 
 interface SpreadsheetProps {
-    onBack: () => void;
 }
 
-const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
+const Spreadsheet = ({}: SpreadsheetProps) => {
     const dispatch = useAppDispatch();
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollTop, setScrollTop] = useState(0);
@@ -161,16 +160,6 @@ const Spreadsheet = ({ onBack }: SpreadsheetProps) => {
             case 'saving': return 'Сохранение...';
             case 'error': return 'Ошибка сохранения';
             default: return 'Сохранено';
-        }
-    };
-
-    const handleBackWithCheck = () => {
-        if (hasUnsavedChanges) {
-            if (window.confirm('У вас есть несохранённые изменения. Вы уверены, что хотите выйти?')) {
-                onBack();
-            }
-        } else {
-            onBack();
         }
     };
 

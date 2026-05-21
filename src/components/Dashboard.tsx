@@ -85,7 +85,6 @@ const Dashboard = () => {
                 {!isDashboard && (
                     <Link to="/dashboard" className="back-link">← Назад к документам</Link>
                 )}
-                <h1>Мои документы</h1>
                 <button className="create-btn" onClick={() => dispatch(openCreateModal())}>
                     + Новый документ
                 </button>

@@ -37,16 +37,11 @@ const SpreadsheetPage = () => {
         setLoading(false);
     }, [documentId, navigate, dispatch]);
 
-    const handleBack = () => {
-        dispatch(setCurrentDocId(null));
-        navigate('/dashboard');
-    };
-
     if (loading) {
         return <div>Загрузка...</div>;
     }
 
-    return <Spreadsheet onBack={handleBack} />;
+    return <Spreadsheet />;
 };
 
 export default SpreadsheetPage;
