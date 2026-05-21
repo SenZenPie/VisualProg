@@ -113,7 +113,15 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             const newCell: CellType = {
                 value: parsedValue,
                 formattedValue: parsedValue !== null ? String(parsedValue) : '',
-                formula: null
+                formula: null,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
             };
             dispatch(updateCell({ row, col, value: newCell }));
         } else {
@@ -121,7 +129,15 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             const newCell: CellType = {
                 value: result,
                 formattedValue: result !== null ? String(result) : '',
-                formula: formula
+                formula: formula,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
             };
             dispatch(updateCell({ row, col, value: newCell }));
         }
@@ -238,7 +254,15 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                         newCell = {
                             value: null,
                             formattedValue: '',
-                            formula: value
+                            formula: value,
+                            style: {
+                                bold: false,
+                                italic: false,
+                                underline: false,
+                                textColor: '#000000',
+                                bgColor: '#ffffff',
+                                align: 'left'
+                            }
                         };
                     } else {
                         const num = parseFloat(value);
@@ -246,13 +270,29 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                             newCell = {
                                 value: num,
                                 formattedValue: value,
-                                formula: null
+                                formula: null,
+                                style: {
+                                    bold: false,
+                                    italic: false,
+                                    underline: false,
+                                    textColor: '#000000',
+                                    bgColor: '#ffffff',
+                                    align: 'left'
+                                }
                             };
                         } else {
                             newCell = {
                                 value: value,
                                 formattedValue: value,
-                                formula: null
+                                formula: null,
+                                style: {
+                                    bold: false,
+                                    italic: false,
+                                    underline: false,
+                                    textColor: '#000000',
+                                    bgColor: '#ffffff',
+                                    align: 'left'
+                                }
                             };
                         }
                     }
@@ -270,6 +310,15 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             for (let col = visibleStartCol; col <= visibleEndCol; col++) {
                 const isEditing = editingCell?.row === row && editingCell?.col === col;
                 const displayValue = getDisplayValue(row, col);
+                const cell = cells[row]?.[col];
+                const style = cell?.style || {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                };
                 
                 viewCells.push(
                     <Cell
@@ -293,6 +342,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                         height={DEFAULT_ROW_HEIGHT}
                         left={columnOffsets[col]}
                         top={row * DEFAULT_ROW_HEIGHT}
+                        style={style}
                     />
                 );
             }

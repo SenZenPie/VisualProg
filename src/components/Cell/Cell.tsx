@@ -1,6 +1,15 @@
 import React, { memo, useRef, useEffect } from 'react';
 import './Cell.css';
 
+interface CellStyle {
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    textColor: string;
+    bgColor: string;
+    align: 'left' | 'center' | 'right';
+}
+
 interface CellProps {
     row: number;
     col: number;
@@ -18,6 +27,7 @@ interface CellProps {
     height: number;
     left: number;
     top: number;
+    style: CellStyle;
 }
 
 const Cell = memo(({
@@ -36,7 +46,8 @@ const Cell = memo(({
     width,
     height,
     left,
-    top
+    top,
+    style
 }: CellProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -53,12 +64,28 @@ const Cell = memo(({
         }
     };
 
-    const style = {
+    const cellStyle = {
         width,
         height,
         position: 'absolute' as const,
         transform: `translate(${left}px, ${top}px)`,
         zIndex: isSelected ? 2 : 1
+    };
+
+    const contentStyle = {
+        fontWeight: style.bold ? 'bold' : 'normal',
+        fontStyle: style.italic ? 'italic' : 'normal',
+        textDecoration: style.underline ? 'underline' : 'none',
+        color: style.textColor,
+        backgroundColor: style.bgColor,
+        textAlign: style.align,
+        padding: '4px 8px',
+        whiteSpace: 'nowrap' as const,
+        overflow: 'hidden' as const,
+        textOverflow: 'ellipsis' as const,
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box' as const
     };
 
     let className = 'cell';
@@ -68,7 +95,7 @@ const Cell = memo(({
     return (
         <div
             className={className}
-            style={style}
+            style={cellStyle}
             onClick={(e) => onSelect(row, col, e.shiftKey)}
             onDoubleClick={() => onDoubleClick(row, col)}
             onContextMenu={(e) => onContextMenu(e, row, col)}
@@ -83,7 +110,9 @@ const Cell = memo(({
                     onBlur={onEditComplete}
                 />
             ) : (
-                <div className="cell-content">{value}</div>
+                <div className="cell-content" style={contentStyle}>
+                    {value}
+                </div>
             )}
         </div>
     );

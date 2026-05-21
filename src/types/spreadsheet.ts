@@ -1,13 +1,26 @@
 export type CellValue = string | number | boolean | null;
+
+export interface CellStyle {
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    textColor: string;
+    bgColor: string;
+    align: 'left' | 'center' | 'right';
+}
+
 export interface Cell {
     value: CellValue;
     formattedValue: string;
     formula: string | null;
+    style: CellStyle;
 }
+
 export interface Position {
-    row: number
-    col:number;
+    row: number;
+    col: number;
 }
+
 export interface Range {
     startRow: number;
     startCol: number;

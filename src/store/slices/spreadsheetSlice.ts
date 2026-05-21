@@ -5,7 +5,15 @@ import type { Cell, Position, Range } from '../../types/spreadsheet';
 const createEmptyCell = (): Cell => ({
     value: null,
     formattedValue: '',
-    formula: null
+    formula: null,
+    style: {
+        bold: false,
+        italic: false,
+        underline: false,
+        textColor: '#000000',
+        bgColor: '#ffffff',
+        align: 'left'
+    }
 });
 
 const initCells = (rows: number, cols: number): Cell[][] => {

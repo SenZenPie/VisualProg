@@ -14,8 +14,16 @@ describe('spreadsheetSlice', () => {
             const newCell: Cell = {
                 value: 10,
                 formattedValue: '10',
-                formula: null
-            };
+                formula: null,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
+};
             const state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -28,7 +36,15 @@ describe('spreadsheetSlice', () => {
             const newCell: Cell = {
                 value: 10,
                 formattedValue: '10',
-                formula: null
+                formula: null,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
             };
             const state = spreadsheetReducer(
                 initialState,
@@ -96,10 +112,18 @@ describe('spreadsheetSlice', () => {
     describe('undo/redo', () => {
         it('should undo last change', () => {
             const newCell: Cell = {
-                value: 10,
-                formattedValue: '10',
-                formula: null
-            };
+            value: 10,
+            formattedValue: '10',
+            formula: null,
+            style: {
+                bold: false,
+                italic: false,
+                underline: false,
+                textColor: '#000000',
+                bgColor: '#ffffff',
+                align: 'left'
+            }
+        };
             let state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -117,10 +141,18 @@ describe('spreadsheetSlice', () => {
 
         it('should redo undone change', () => {
             const newCell: Cell = {
-                value: 10,
-                formattedValue: '10',
-                formula: null
-            };
+            value: 10,
+            formattedValue: '10',
+            formula: null,
+            style: {
+                bold: false,
+                italic: false,
+                underline: false,
+                textColor: '#000000',
+                bgColor: '#ffffff',
+                align: 'left'
+            }
+        };
             let state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -174,7 +206,19 @@ describe('spreadsheetSlice', () => {
     describe('setCells', () => {
         it('should replace all cells', () => {
             const newCells: Cell[][] = [[
-                { value: 100, formattedValue: '100', formula: null }
+                { 
+                    value: 100, 
+                    formattedValue: '100', 
+                    formula: null,
+                    style: {
+                        bold: false,
+                        italic: false,
+                        underline: false,
+                        textColor: '#000000',
+                        bgColor: '#ffffff',
+                        align: 'left'
+                    }
+                }
             ]];
             const state = spreadsheetReducer(initialState, setCells(newCells));
             expect(state.cells).toEqual(newCells);
