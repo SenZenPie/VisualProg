@@ -30,9 +30,9 @@ const Toolbar = ({
             </div>
             <div className="toolbar-divider"></div>
             <div className="toolbar-group">
-                <button onClick={onAlignLeft} title="Выровнять влево">≡</button>
-                <button onClick={onAlignCenter} title="Выровнять по центру">≣</button>
-                <button onClick={onAlignRight} title="Выровнять вправо">Ξ</button>
+                <button onClick={onAlignLeft} title="Выровнять влево">L</button>
+                <button onClick={onAlignCenter} title="Выровнять по центру">C</button>
+                <button onClick={onAlignRight} title="Выровнять вправо">R</button>
             </div>
             <div className="toolbar-divider"></div>
             <div className="toolbar-group">

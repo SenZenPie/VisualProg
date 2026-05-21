@@ -25,6 +25,7 @@ interface SpreadsheetProps {
 const Spreadsheet = ({}: SpreadsheetProps) => {
     const dispatch = useAppDispatch();
     const containerRef = useRef<HTMLDivElement>(null);
+    const [clipboard, setClipboard] = useState<{ value: string; row: number; col: number } | null>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number; col: number } | null>(null);
@@ -102,6 +103,36 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
                 e.preventDefault();
                 toggleUnderline();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                e.preventDefault();
+                handleCopy();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+                e.preventDefault();
+                handleCut();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                e.preventDefault();
+                handlePaste();
+            }
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                e.preventDefault();
+                if (selectedCell) {
+                    handleSetCellFormula(selectedCell.row, selectedCell.col, '');
+                }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                if (cells.length > 0 && cells[0].length > 0) {
+                    dispatch(setSelectedCell({ row: 0, col: 0 }));
+                    dispatch(setSelectedRange({
+                        startRow: 0,
+                        startCol: 0,
+                        endRow: cells.length - 1,
+                        endCol: cells[0].length - 1
+                    }));
+                }
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -429,6 +460,38 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         }
         return headers;
     }, [visibleStartCol, visibleEndCol, columnWidths, columnOffsets]);
+
+    const handleCopy = () => {
+        if (selectedCell) {
+            const cell = cells[selectedCell.row]?.[selectedCell.col];
+            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
+            setClipboard({
+                value: value,
+                row: selectedCell.row,
+                col: selectedCell.col
+            });
+        }
+    };
+
+    const handleCut = () => {
+        if (selectedCell) {
+            const cell = cells[selectedCell.row]?.[selectedCell.col];
+            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
+            setClipboard({
+                value: value,
+                row: selectedCell.row,
+                col: selectedCell.col
+            });
+            // Очищаем ячейку
+            handleSetCellFormula(selectedCell.row, selectedCell.col, '');
+        }
+    };
+
+    const handlePaste = () => {
+        if (selectedCell && clipboard) {
+            handleSetCellFormula(selectedCell.row, selectedCell.col, clipboard.value);
+        }
+    };
 
     return (
         <div className="spreadsheet">

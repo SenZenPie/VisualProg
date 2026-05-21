@@ -1,14 +1,89 @@
+import { useState } from 'react';
+import { useAppSelector } from '../store/hooks';
+
 const ProfilePage = () => {
+    const documentsCount = useAppSelector((state) => state.documents.list.length);
+    const [name, setName] = useState('Павел');
+    const [email] = useState('почта@почта.com');
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [message, setMessage] = useState('');
+
+    const handleNameChange = (e: React.FormEvent) => {
+        e.preventDefault();
+        setMessage('Имя изменено');
+        setTimeout(() => setMessage(''), 3000);
+    };
+
+    const handlePasswordChange = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmPassword) {
+            setMessage('Пароли не совпадают');
+        } else if (newPassword.length < 3) {
+            setMessage('Пароль должен быть не менее 3 символов');
+        } else {
+            setMessage('Пароль изменён');
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        }
+        setTimeout(() => setMessage(''), 3000);
+    };
+
     return (
         <div className="dashboard">
             <div className="dashboard-header">
                 <h1>Профиль пользователя</h1>
             </div>
             <div className="profile-info">
-                <p><strong>Имя:</strong> Павел</p>
-                <p><strong>Email:</strong> рандомнаяпочта@gmail.com</p>
+                <p><strong>Email:</strong> {email}</p>
+                <p><strong>Количество документов:</strong> {documentsCount}</p>
                 <p><strong>Дата регистрации:</strong> 05.21.2026</p>
             </div>
+
+            <div className="profile-form">
+                <h3>Изменить имя</h3>
+                <form onSubmit={handleNameChange}>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="profile-input"
+                    />
+                    <button type="submit" className="profile-btn">Сохранить</button>
+                </form>
+            </div>
+
+            <div className="profile-form">
+                <h3>Сменить пароль</h3>
+                <form onSubmit={handlePasswordChange}>
+                    <input
+                        type="password"
+                        placeholder="Старый пароль"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        className="profile-input"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Новый пароль"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="profile-input"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Подтверждение пароля"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="profile-input"
+                    />
+                    <button type="submit" className="profile-btn">Сменить пароль</button>
+                </form>
+            </div>
+
+            {message && <div className="profile-message">{message}</div>}
         </div>
     );
 };
