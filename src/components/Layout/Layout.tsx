@@ -12,14 +12,22 @@ const Layout = () => {
                 <div className="logo">
                     <h1>Спридщит СибГУТИ продакшн</h1>
                 </div>
-                <nav className="layout-nav">
-                    <Link to="/dashboard" className={isDashboard ? 'active' : ''}>Документы</Link>
-                    <Link to="/profile" className={isProfile ? 'active' : ''}>Профиль</Link>
-                </nav>
             </header>
-            <main className="layout-main">
-                <Outlet />
-            </main>
+            <div className="layout-container">
+                <aside className="layout-sidebar">
+                    <nav className="sidebar-nav">
+                        <Link to="/dashboard" className={isDashboard ? 'active' : ''}>
+                            Документы
+                        </Link>
+                        <Link to="/profile" className={isProfile ? 'active' : ''}>
+                            Профиль
+                        </Link>
+                    </nav>
+                </aside>
+                <main className="layout-main">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 };
