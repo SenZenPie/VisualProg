@@ -48,7 +48,7 @@ const ProfilePage = () => {
             <div className="profile-info">
                 <p><strong>Email:</strong> {user.email}</p>
                 <p><strong>Количество документов:</strong> {documentsCount}</p>
-                <p><strong>Дата регистрации:</strong> {user.createdAt || '01.01.2024'}</p>
+                <p><strong>Дата регистрации:</strong> {user.createdAt || '05.21.2026'}</p>
             </div>
 
             <div className="profile-form">
