@@ -25,7 +25,7 @@ const LoginPage = () => {
             if (email === 'gothmuncher@gmail.com' && password === '12345678') {
                 dispatch(loginSuccess({
                     id: '1',
-                    name: 'Тест',
+                    name: 'Павел',
                     email: email
                 }));
                 navigate('/dashboard');

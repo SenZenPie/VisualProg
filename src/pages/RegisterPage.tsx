@@ -43,7 +43,8 @@ const RegisterPage = () => {
             dispatch(loginSuccess({
                 id: Date.now().toString(),
                 name: name,
-                email: email
+                email: email,
+                createdAt: new Date().toISOString()
             }));
             navigate('/dashboard');
             dispatch(setLoading(false));

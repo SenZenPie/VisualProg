@@ -43,6 +43,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const docName = useAppSelector((state) => state.documents.currentDocument?.name || '');
     const saveStatus = useAppSelector((state) => state.documents.saveStatus);
     const currentDocId = useAppSelector((state) => state.documents.currentDocId);
+    const userId = useAppSelector((state) => state.auth.user?.id);
     const hasUnsavedChanges = saveStatus === 'saving';
 
     const formatValue = (value: CellValue, format: string): string => {
@@ -263,15 +264,15 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     }, [dispatch, selectedCell, cells, toggleBold, toggleItalic, toggleUnderline, handleCopy, handleCut, handlePaste]);
 
     useEffect(() => {
-        if (!currentDocId) return;
+        if (!currentDocId || !userId) return;
         
         const timeout = setTimeout(() => {
-            updateDocumentCells(currentDocId, cells);
+            updateDocumentCells(currentDocId, userId, cells);
             dispatch(setSaveStatus('saved'));
         }, 500);
         
         return () => clearTimeout(timeout);
-    }, [cells, currentDocId, dispatch]);
+    }, [cells, currentDocId, userId, dispatch]);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {

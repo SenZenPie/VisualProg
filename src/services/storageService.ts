@@ -12,20 +12,24 @@ function saveDocuments(docs: Document[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
 }
 
-export function getDocumentsList(): DocumentSummary[] {
+export function getDocumentsList(userId: string): DocumentSummary[] {
     const docs = getDocuments();
-    return docs.map(doc => ({
+    const userDocs = docs.filter(doc => doc.userId === userId);
+    return userDocs.map(doc => ({
         id: doc.id,
         name: doc.name,
+        userId: doc.userId,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt,
         preview: doc.preview || [['', '', ''], ['', '', ''], ['', '', '']]
     }));
 }
 
-export function getDocumentById(id: string): Document | null {
+export function getDocumentById(id: string, userId: string): Document | null {
     const docs = getDocuments();
-    return docs.find(d => d.id === id) || null;
+    const doc = docs.find(d => d.id === id);
+    if (doc && doc.userId === userId) return doc;
+    return null;
 }
 
 export function saveDocument(doc: Document): void {
@@ -39,10 +43,11 @@ export function saveDocument(doc: Document): void {
     saveDocuments(docs);
 }
 
-export function createDocument(name: string, rows: number, cols: number): Document {
+export function createDocument(userId: string, name: string, rows: number, cols: number): Document {
     const newDoc: Document = {
         id: Date.now().toString(),
         name,
+        userId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         rows,
@@ -55,16 +60,16 @@ export function createDocument(name: string, rows: number, cols: number): Docume
     return newDoc;
 }
 
-export function updateDocument(id: string, updates: Partial<Document>): void {
-    const doc = getDocumentById(id);
+export function updateDocument(id: string, userId: string, updates: Partial<Document>): void {
+    const doc = getDocumentById(id, userId);
     if (doc) {
         const updated = { ...doc, ...updates, updatedAt: new Date().toISOString() };
         saveDocument(updated);
     }
 }
 
-export function updateDocumentCells(id: string, cells: Cell[][]): void {
-    const doc = getDocumentById(id);
+export function updateDocumentCells(id: string, userId: string, cells: Cell[][]): void {
+    const doc = getDocumentById(id, userId);
     if (doc) {
         const preview = [
             [cells[0]?.[0]?.formattedValue || '', cells[0]?.[1]?.formattedValue || '', cells[0]?.[2]?.formattedValue || ''],
@@ -76,20 +81,21 @@ export function updateDocumentCells(id: string, cells: Cell[][]): void {
     }
 }
 
-export function deleteDocument(id: string): void {
+export function deleteDocument(id: string, userId: string): void {
     const docs = getDocuments();
-    const filtered = docs.filter(d => d.id !== id);
+    const filtered = docs.filter(d => !(d.id === id && d.userId === userId));
     saveDocuments(filtered);
 }
 
-export function duplicateDocument(id: string): Document | null {
-    const original = getDocumentById(id);
+export function duplicateDocument(id: string, userId: string): Document | null {
+    const original = getDocumentById(id, userId);
     if (!original) return null;
     
     const newDoc: Document = {
         ...original,
         id: Date.now().toString(),
         name: `${original.name} (копия)`,
+        userId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };

@@ -1,5 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import documentsReducer, {setDocumentsList,setCurrentDocument,setCurrentDocId,addDocument,updateDocumentInList,removeDocument,setLoading,setError,setSaveStatus} from './documentsSlice';
+import documentsReducer, {
+    setDocumentsList,
+    setCurrentDocument,
+    setCurrentDocId,
+    addDocument,
+    updateDocumentInList,
+    removeDocument,
+    setLoading,
+    setError,
+    setSaveStatus
+} from './documentsSlice';
 import type { Document, DocumentSummary } from '../../types/spreadsheet';
 
 describe('documentsSlice', () => {
@@ -15,6 +25,7 @@ describe('documentsSlice', () => {
                 {
                     id: '1',
                     name: 'Doc 1',
+                    userId: 'user1',
                     createdAt: '2024-01-01',
                     updatedAt: '2024-01-01',
                     preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -30,6 +41,7 @@ describe('documentsSlice', () => {
             const doc: Document = {
                 id: '1',
                 name: 'Doc 1',
+                userId: 'user1',
                 createdAt: '2024-01-01',
                 updatedAt: '2024-01-01',
                 rows: 100,
@@ -61,6 +73,7 @@ describe('documentsSlice', () => {
             const existingDoc: DocumentSummary = {
                 id: '1',
                 name: 'Doc 1',
+                userId: 'user1',
                 createdAt: '2024-01-01',
                 updatedAt: '2024-01-01',
                 preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -70,6 +83,7 @@ describe('documentsSlice', () => {
             const newDoc: DocumentSummary = {
                 id: '2',
                 name: 'Doc 2',
+                userId: 'user1',
                 createdAt: '2024-01-02',
                 updatedAt: '2024-01-02',
                 preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -85,6 +99,7 @@ describe('documentsSlice', () => {
             const doc: DocumentSummary = {
                 id: '1',
                 name: 'Old Name',
+                userId: 'user1',
                 createdAt: '2024-01-01',
                 updatedAt: '2024-01-01',
                 preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -100,6 +115,7 @@ describe('documentsSlice', () => {
             const doc1: DocumentSummary = {
                 id: '1',
                 name: 'Doc 1',
+                userId: 'user1',
                 createdAt: '2024-01-01',
                 updatedAt: '2024-01-01',
                 preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -107,6 +123,7 @@ describe('documentsSlice', () => {
             const doc2: DocumentSummary = {
                 id: '2',
                 name: 'Doc 2',
+                userId: 'user1',
                 createdAt: '2024-01-02',
                 updatedAt: '2024-01-02',
                 preview: [['', '', ''], ['', '', ''], ['', '', '']]
@@ -121,6 +138,7 @@ describe('documentsSlice', () => {
             const doc: Document = {
                 id: '1',
                 name: 'Doc 1',
+                userId: 'user1',
                 createdAt: '2024-01-01',
                 updatedAt: '2024-01-01',
                 rows: 100,

@@ -32,6 +32,7 @@ export interface Range {
 export interface Document {
     id: string;
     name: string;
+    userId: string;
     createdAt: string;
     updatedAt: string;
     rows: number;
@@ -43,6 +44,7 @@ export interface Document {
 export interface DocumentSummary {
     id: string;
     name: string;
+    userId: string;
     createdAt: string;
     updatedAt: string;
     preview: string[][];

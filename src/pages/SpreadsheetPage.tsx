@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useAppDispatch } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setCurrentDocId, setCurrentDocument, setDocumentsList } from '../store/slices/documentsSlice';
 import { setCells } from '../store/slices/spreadsheetSlice';
 import { getDocumentById, getDocumentsList } from '../services/storageService';
@@ -11,22 +11,25 @@ const SpreadsheetPage = () => {
     const { documentId } = useParams<{ documentId: string }>();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const userId = useAppSelector((state) => state.auth.user?.id);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!documentId) {
+        if (!documentId || !userId) {
             navigate('/dashboard');
             return;
         }
 
-        const doc = getDocumentById(documentId);
+        const doc = getDocumentById(documentId, userId);
         
         if (!doc) {
-            navigate('/dashboard');
+            setError('403');
+            setTimeout(() => navigate('/dashboard'), 2000);
             return;
         }
 
-        const docs = getDocumentsList();
+        const docs = getDocumentsList(userId);
         dispatch(setDocumentsList(docs));
         dispatch(setCurrentDocument(doc));
         dispatch(setCurrentDocId(documentId));
@@ -34,7 +37,7 @@ const SpreadsheetPage = () => {
         if (doc.cells && doc.cells.length > 0) {
             dispatch(setCells(doc.cells));
         } else {
-            const initCells = (rows: number, cols: number): Cell[][] => {
+            const initCellsFunction = (rows: number, cols: number): Cell[][] => {
                 const newCells: Cell[][] = [];
                 for (let i = 0; i < rows; i++) {
                     newCells[i] = [];
@@ -57,11 +60,23 @@ const SpreadsheetPage = () => {
                 }
                 return newCells;
             };
-            dispatch(setCells(initCells(doc.rows, doc.cols)));
+            dispatch(setCells(initCellsFunction(doc.rows, doc.cols)));
         }
         
         setLoading(false);
-    }, [documentId, navigate, dispatch]);
+    }, [documentId, userId, navigate, dispatch]);
+
+    if (error === '403') {
+        return (
+            <div className="auth-page">
+                <div className="auth-container">
+                    <h1>403 - Доступ запрещён</h1>
+                    <p>У вас нет доступа к этому документу</p>
+                    <p>Перенаправление на главную...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return <div>Загрузка...</div>;
