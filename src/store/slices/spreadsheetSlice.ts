@@ -12,7 +12,8 @@ const createEmptyCell = (): Cell => ({
         underline: false,
         textColor: '#000000',
         bgColor: '#ffffff',
-        align: 'left'
+        align: 'left',
+        format: 'text'
     }
 });
 

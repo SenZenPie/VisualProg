@@ -1,6 +1,29 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import spreadsheetReducer, {updateCell,setSelectedCell,setSelectedRange,setEditingCell,setEditValue,undo,redo,addRow,deleteRow,addColumn,deleteColumn,setCells} from './spreadsheetSlice';
+import spreadsheetReducer, {
+    updateCell,
+    setSelectedCell,
+    setSelectedRange,
+    setEditingCell,
+    setEditValue,
+    undo,
+    redo,
+    addRow,
+    deleteRow,
+    addColumn,
+    deleteColumn,
+    setCells
+} from './spreadsheetSlice';
 import type { Cell } from '../../types/spreadsheet';
+
+const defaultStyle = {
+    bold: false,
+    italic: false,
+    underline: false,
+    textColor: '#000000',
+    bgColor: '#ffffff',
+    align: 'left' as const,
+    format: 'text' as const
+};
 
 describe('spreadsheetSlice', () => {
     let initialState: any;
@@ -15,15 +38,8 @@ describe('spreadsheetSlice', () => {
                 value: 10,
                 formattedValue: '10',
                 formula: null,
-                style: {
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                    textColor: '#000000',
-                    bgColor: '#ffffff',
-                    align: 'left'
-                }
-};
+                style: defaultStyle
+            };
             const state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -37,14 +53,7 @@ describe('spreadsheetSlice', () => {
                 value: 10,
                 formattedValue: '10',
                 formula: null,
-                style: {
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                    textColor: '#000000',
-                    bgColor: '#ffffff',
-                    align: 'left'
-                }
+                style: defaultStyle
             };
             const state = spreadsheetReducer(
                 initialState,
@@ -112,18 +121,11 @@ describe('spreadsheetSlice', () => {
     describe('undo/redo', () => {
         it('should undo last change', () => {
             const newCell: Cell = {
-            value: 10,
-            formattedValue: '10',
-            formula: null,
-            style: {
-                bold: false,
-                italic: false,
-                underline: false,
-                textColor: '#000000',
-                bgColor: '#ffffff',
-                align: 'left'
-            }
-        };
+                value: 10,
+                formattedValue: '10',
+                formula: null,
+                style: defaultStyle
+            };
             let state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -141,18 +143,11 @@ describe('spreadsheetSlice', () => {
 
         it('should redo undone change', () => {
             const newCell: Cell = {
-            value: 10,
-            formattedValue: '10',
-            formula: null,
-            style: {
-                bold: false,
-                italic: false,
-                underline: false,
-                textColor: '#000000',
-                bgColor: '#ffffff',
-                align: 'left'
-            }
-        };
+                value: 10,
+                formattedValue: '10',
+                formula: null,
+                style: defaultStyle
+            };
             let state = spreadsheetReducer(
                 initialState,
                 updateCell({ row: 0, col: 0, value: newCell })
@@ -205,21 +200,12 @@ describe('spreadsheetSlice', () => {
 
     describe('setCells', () => {
         it('should replace all cells', () => {
-            const newCells: Cell[][] = [[
-                { 
-                    value: 100, 
-                    formattedValue: '100', 
-                    formula: null,
-                    style: {
-                        bold: false,
-                        italic: false,
-                        underline: false,
-                        textColor: '#000000',
-                        bgColor: '#ffffff',
-                        align: 'left'
-                    }
-                }
-            ]];
+            const newCells: Cell[][] = [[{
+                value: 100,
+                formattedValue: '100',
+                formula: null,
+                style: defaultStyle
+            }]];
             const state = spreadsheetReducer(initialState, setCells(newCells));
             expect(state.cells).toEqual(newCells);
         });

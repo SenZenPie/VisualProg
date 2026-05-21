@@ -9,6 +9,10 @@ interface ToolbarProps {
     onAlignRight: () => void;
     onTextColor: (color: string) => void;
     onBgColor: (color: string) => void;
+    onFormatNumber: () => void;
+    onFormatPercent: () => void;
+    onFormatCurrency: () => void;
+    onFormatDate: () => void;
 }
 
 const Toolbar = ({
@@ -19,7 +23,11 @@ const Toolbar = ({
     onAlignCenter,
     onAlignRight,
     onTextColor,
-    onBgColor
+    onBgColor,
+    onFormatNumber,
+    onFormatPercent,
+    onFormatCurrency,
+    onFormatDate
 }: ToolbarProps) => {
     return (
         <div className="toolbar">
@@ -46,6 +54,13 @@ const Toolbar = ({
                     onChange={(e) => onBgColor(e.target.value)}
                     title="Цвет фона"
                 />
+            </div>
+            <div className="toolbar-divider"></div>
+            <div className="toolbar-group">
+                <button onClick={onFormatNumber} title="Число">123</button>
+                <button onClick={onFormatPercent} title="Процент">%</button>
+                <button onClick={onFormatCurrency} title="Валюта">$</button>
+                <button onClick={onFormatDate} title="Дата">00:00</button>
             </div>
         </div>
     );

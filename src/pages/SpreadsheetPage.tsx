@@ -49,7 +49,8 @@ const SpreadsheetPage = () => {
                                 underline: false,
                                 textColor: '#000000',
                                 bgColor: '#ffffff',
-                                align: 'left'
+                                align: 'left',
+                                format: 'text'
                             }
                         };
                     }

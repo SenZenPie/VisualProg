@@ -7,6 +7,7 @@ export interface CellStyle {
     textColor: string;
     bgColor: string;
     align: 'left' | 'center' | 'right';
+    format: 'number' | 'percent' | 'currency' | 'date' | 'text';
 }
 
 export interface Cell {

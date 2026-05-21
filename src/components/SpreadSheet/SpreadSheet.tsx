@@ -25,7 +25,7 @@ interface SpreadsheetProps {
 const Spreadsheet = ({}: SpreadsheetProps) => {
     const dispatch = useAppDispatch();
     const containerRef = useRef<HTMLDivElement>(null);
-    const [clipboard, setClipboard] = useState<{ value: string; row: number; col: number } | null>(null);
+    const [clipboard, setClipboard] = useState<{ cell: CellType } | null>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; row: number; col: number } | null>(null);
@@ -44,6 +44,26 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const saveStatus = useAppSelector((state) => state.documents.saveStatus);
     const currentDocId = useAppSelector((state) => state.documents.currentDocId);
     const hasUnsavedChanges = saveStatus === 'saving';
+
+    const formatValue = (value: CellValue, format: string): string => {
+        if (value === null || value === '') return '';
+        const num = typeof value === 'number' ? value : parseFloat(String(value));
+        if (isNaN(num)) return String(value);
+        
+        switch (format) {
+            case 'percent':
+                return `${(num * 100).toFixed(2)}%`;
+            case 'currency':
+                return `$${num.toFixed(2)}`;
+            case 'date':
+                const date = new Date(num);
+                return date.toLocaleDateString('ru-RU');
+            case 'number':
+                return num.toLocaleString();
+            default:
+                return String(value);
+        }
+    };
 
     const applyStyleToSelected = useCallback((style: Partial<CellStyle>) => {
         if (selectedCell) {
@@ -81,6 +101,10 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const handleAlignRight = useCallback(() => applyStyleToSelected({ align: 'right' }), [applyStyleToSelected]);
     const handleTextColor = useCallback((color: string) => applyStyleToSelected({ textColor: color }), [applyStyleToSelected]);
     const handleBgColor = useCallback((color: string) => applyStyleToSelected({ bgColor: color }), [applyStyleToSelected]);
+    const handleFormatNumber = useCallback(() => applyStyleToSelected({ format: 'number' }), [applyStyleToSelected]);
+    const handleFormatPercent = useCallback(() => applyStyleToSelected({ format: 'percent' }), [applyStyleToSelected]);
+    const handleFormatCurrency = useCallback(() => applyStyleToSelected({ format: 'currency' }), [applyStyleToSelected]);
+    const handleFormatDate = useCallback(() => applyStyleToSelected({ format: 'date' }), [applyStyleToSelected]);
 
     const handleSetCellFormula = useCallback((row: number, col: number, formula: string) => {
         dispatch(setSaveStatus('saving'));
@@ -103,7 +127,8 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                     underline: false,
                     textColor: '#000000',
                     bgColor: '#ffffff',
-                    align: 'left'
+                    align: 'left',
+                    format: 'text'
                 }
             };
             dispatch(updateCell({ row, col, value: newCell }));
@@ -119,7 +144,8 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                     underline: false,
                     textColor: '#000000',
                     bgColor: '#ffffff',
-                    align: 'left'
+                    align: 'left',
+                    format: 'text'
                 }
             };
             dispatch(updateCell({ row, col, value: newCell }));
@@ -129,33 +155,41 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const handleCopy = useCallback(() => {
         if (selectedCell) {
             const cell = cells[selectedCell.row]?.[selectedCell.col];
-            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
-            setClipboard({
-                value: value,
-                row: selectedCell.row,
-                col: selectedCell.col
-            });
+            if (cell) {
+                setClipboard({ cell: cell });
+            }
         }
     }, [selectedCell, cells]);
 
     const handleCut = useCallback(() => {
         if (selectedCell) {
             const cell = cells[selectedCell.row]?.[selectedCell.col];
-            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
-            setClipboard({
-                value: value,
-                row: selectedCell.row,
-                col: selectedCell.col
-            });
-            handleSetCellFormula(selectedCell.row, selectedCell.col, '');
+            if (cell) {
+                setClipboard({ cell: cell });
+                const emptyCell: CellType = {
+                    value: null,
+                    formattedValue: '',
+                    formula: null,
+                    style: {
+                        bold: false,
+                        italic: false,
+                        underline: false,
+                        textColor: '#000000',
+                        bgColor: '#ffffff',
+                        align: 'left',
+                        format: 'text'
+                    }
+                };
+                dispatch(updateCell({ row: selectedCell.row, col: selectedCell.col, value: emptyCell }));
+            }
         }
-    }, [selectedCell, cells, handleSetCellFormula]);
+    }, [selectedCell, cells, dispatch]);
 
     const handlePaste = useCallback(() => {
         if (selectedCell && clipboard) {
-            handleSetCellFormula(selectedCell.row, selectedCell.col, clipboard.value);
+            dispatch(updateCell({ row: selectedCell.row, col: selectedCell.col, value: clipboard.cell }));
         }
-    }, [selectedCell, clipboard, handleSetCellFormula]);
+    }, [selectedCell, clipboard, dispatch]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -167,34 +201,48 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                 e.preventDefault();
                 dispatch(redo());
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'и')) {
                 e.preventDefault();
                 toggleBold();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'ш')) {
                 e.preventDefault();
                 toggleItalic();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'г')) {
                 e.preventDefault();
                 toggleUnderline();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'с')) {
                 e.preventDefault();
                 handleCopy();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'x' || e.key === 'ч')) {
                 e.preventDefault();
                 handleCut();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'м')) {
                 e.preventDefault();
                 handlePaste();
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 e.preventDefault();
                 if (selectedCell) {
-                    handleSetCellFormula(selectedCell.row, selectedCell.col, '');
+                    const emptyCell: CellType = {
+                        value: null,
+                        formattedValue: '',
+                        formula: null,
+                        style: {
+                            bold: false,
+                            italic: false,
+                            underline: false,
+                            textColor: '#000000',
+                            bgColor: '#ffffff',
+                            align: 'left',
+                            format: 'text'
+                        }
+                    };
+                    dispatch(updateCell({ row: selectedCell.row, col: selectedCell.col, value: emptyCell }));
                 }
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
@@ -212,7 +260,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [dispatch, selectedCell, cells, toggleBold, toggleItalic, toggleUnderline, handleCopy, handleCut, handlePaste, handleSetCellFormula]);
+    }, [dispatch, selectedCell, cells, toggleBold, toggleItalic, toggleUnderline, handleCopy, handleCut, handlePaste]);
 
     useEffect(() => {
         if (!currentDocId) return;
@@ -245,14 +293,6 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         }
         return cell?.value || null;
     }, [cells]);
-
-    const getDisplayValue = (row: number, col: number): string => {
-        const value = getCellValue(row, col);
-        if (value === null) return '';
-        if (typeof value === 'number') return value.toString();
-        if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-        return value;
-    };
 
     const startEdit = (row: number, col: number) => {
         const cell = cells[row]?.[col];
@@ -372,7 +412,8 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                                 underline: false,
                                 textColor: '#000000',
                                 bgColor: '#ffffff',
-                                align: 'left'
+                                align: 'left',
+                                format: 'text'
                             }
                         };
                     } else {
@@ -388,7 +429,8 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                                     underline: false,
                                     textColor: '#000000',
                                     bgColor: '#ffffff',
-                                    align: 'left'
+                                    align: 'left',
+                                    format: 'text'
                                 }
                             };
                         } else {
@@ -402,7 +444,8 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                                     underline: false,
                                     textColor: '#000000',
                                     bgColor: '#ffffff',
-                                    align: 'left'
+                                    align: 'left',
+                                    format: 'text'
                                 }
                             };
                         }
@@ -420,7 +463,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         for (let row = visibleStartRow; row <= currentEndRow; row++) {
             for (let col = visibleStartCol; col <= visibleEndCol; col++) {
                 const isEditing = editingCell?.row === row && editingCell?.col === col;
-                const displayValue = getDisplayValue(row, col);
+                const rawValue = getCellValue(row, col);
                 const cell = cells[row]?.[col];
                 const style = cell?.style || {
                     bold: false,
@@ -428,8 +471,10 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                     underline: false,
                     textColor: '#000000',
                     bgColor: '#ffffff',
-                    align: 'left'
+                    align: 'left',
+                    format: 'text'
                 };
+                const displayValue = formatValue(rawValue, style.format);
                 
                 viewCells.push(
                     <Cell
@@ -459,7 +504,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
             }
         }
         return viewCells;
-    }, [visibleStartRow, visibleEndRow, visibleStartCol, visibleEndCol, editingCell, selectedCell, selectedRange, editValue, columnWidths, columnOffsets, cells, getDisplayValue]);
+    }, [visibleStartRow, visibleEndRow, visibleStartCol, visibleEndCol, editingCell, selectedCell, selectedRange, editValue, columnWidths, columnOffsets, cells, getCellValue, formatValue]);
 
     const renderedRowHeaders = useMemo(() => {
         const headers = [];
@@ -538,6 +583,10 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                 onAlignRight={handleAlignRight}
                 onTextColor={handleTextColor}
                 onBgColor={handleBgColor}
+                onFormatNumber={handleFormatNumber}
+                onFormatPercent={handleFormatPercent}
+                onFormatCurrency={handleFormatCurrency}
+                onFormatDate={handleFormatDate}
             />
             <FormulaBar
                 value={selectedCell ? (cells[selectedCell.row]?.[selectedCell.col]?.formula || String(cells[selectedCell.row]?.[selectedCell.col]?.value || '')) : ''}
