@@ -45,7 +45,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
     const currentDocId = useAppSelector((state) => state.documents.currentDocId);
     const hasUnsavedChanges = saveStatus === 'saving';
 
-    const applyStyleToSelected = (style: Partial<CellStyle>) => {
+    const applyStyleToSelected = useCallback((style: Partial<CellStyle>) => {
         if (selectedCell) {
             dispatch(updateCellStyle({
                 row: selectedCell.row,
@@ -53,34 +53,109 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
                 style
             }));
         }
-    };
+    }, [selectedCell, dispatch]);
 
-    const toggleBold = () => {
+    const toggleBold = useCallback(() => {
         if (selectedCell) {
             const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
             applyStyleToSelected({ bold: !currentStyle?.bold });
         }
-    };
+    }, [selectedCell, cells, applyStyleToSelected]);
 
-    const toggleItalic = () => {
+    const toggleItalic = useCallback(() => {
         if (selectedCell) {
             const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
             applyStyleToSelected({ italic: !currentStyle?.italic });
         }
-    };
+    }, [selectedCell, cells, applyStyleToSelected]);
 
-    const toggleUnderline = () => {
+    const toggleUnderline = useCallback(() => {
         if (selectedCell) {
             const currentStyle = cells[selectedCell.row]?.[selectedCell.col]?.style;
             applyStyleToSelected({ underline: !currentStyle?.underline });
         }
-    };
+    }, [selectedCell, cells, applyStyleToSelected]);
 
-    const handleAlignLeft = () => applyStyleToSelected({ align: 'left' });
-    const handleAlignCenter = () => applyStyleToSelected({ align: 'center' });
-    const handleAlignRight = () => applyStyleToSelected({ align: 'right' });
-    const handleTextColor = (color: string) => applyStyleToSelected({ textColor: color });
-    const handleBgColor = (color: string) => applyStyleToSelected({ bgColor: color });
+    const handleAlignLeft = useCallback(() => applyStyleToSelected({ align: 'left' }), [applyStyleToSelected]);
+    const handleAlignCenter = useCallback(() => applyStyleToSelected({ align: 'center' }), [applyStyleToSelected]);
+    const handleAlignRight = useCallback(() => applyStyleToSelected({ align: 'right' }), [applyStyleToSelected]);
+    const handleTextColor = useCallback((color: string) => applyStyleToSelected({ textColor: color }), [applyStyleToSelected]);
+    const handleBgColor = useCallback((color: string) => applyStyleToSelected({ bgColor: color }), [applyStyleToSelected]);
+
+    const handleSetCellFormula = useCallback((row: number, col: number, formula: string) => {
+        dispatch(setSaveStatus('saving'));
+        
+        if (!formula.startsWith('=')) {
+            let parsedValue: CellValue = formula;
+            if (formula === '') parsedValue = null;
+            else if (!isNaN(Number(formula))) parsedValue = Number(formula);
+            else if (formula.toLowerCase() === 'true') parsedValue = true;
+            else if (formula.toLowerCase() === 'false') parsedValue = false;
+            else parsedValue = formula;
+            
+            const newCell: CellType = {
+                value: parsedValue,
+                formattedValue: parsedValue !== null ? String(parsedValue) : '',
+                formula: null,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
+            };
+            dispatch(updateCell({ row, col, value: newCell }));
+        } else {
+            const result = evaluateFormula(formula, getCellValue);
+            const newCell: CellType = {
+                value: result,
+                formattedValue: result !== null ? String(result) : '',
+                formula: formula,
+                style: {
+                    bold: false,
+                    italic: false,
+                    underline: false,
+                    textColor: '#000000',
+                    bgColor: '#ffffff',
+                    align: 'left'
+                }
+            };
+            dispatch(updateCell({ row, col, value: newCell }));
+        }
+    }, [dispatch]);
+
+    const handleCopy = useCallback(() => {
+        if (selectedCell) {
+            const cell = cells[selectedCell.row]?.[selectedCell.col];
+            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
+            setClipboard({
+                value: value,
+                row: selectedCell.row,
+                col: selectedCell.col
+            });
+        }
+    }, [selectedCell, cells]);
+
+    const handleCut = useCallback(() => {
+        if (selectedCell) {
+            const cell = cells[selectedCell.row]?.[selectedCell.col];
+            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
+            setClipboard({
+                value: value,
+                row: selectedCell.row,
+                col: selectedCell.col
+            });
+            handleSetCellFormula(selectedCell.row, selectedCell.col, '');
+        }
+    }, [selectedCell, cells, handleSetCellFormula]);
+
+    const handlePaste = useCallback(() => {
+        if (selectedCell && clipboard) {
+            handleSetCellFormula(selectedCell.row, selectedCell.col, clipboard.value);
+        }
+    }, [selectedCell, clipboard, handleSetCellFormula]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -137,7 +212,7 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [dispatch]);
+    }, [dispatch, selectedCell, cells, toggleBold, toggleItalic, toggleUnderline, handleCopy, handleCut, handlePaste, handleSetCellFormula]);
 
     useEffect(() => {
         if (!currentDocId) return;
@@ -177,50 +252,6 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         if (typeof value === 'number') return value.toString();
         if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
         return value;
-    };
-
-    const handleSetCellFormula = (row: number, col: number, formula: string) => {
-        dispatch(setSaveStatus('saving'));
-        
-        if (!formula.startsWith('=')) {
-            let parsedValue: CellValue = formula;
-            if (formula === '') parsedValue = null;
-            else if (!isNaN(Number(formula))) parsedValue = Number(formula);
-            else if (formula.toLowerCase() === 'true') parsedValue = true;
-            else if (formula.toLowerCase() === 'false') parsedValue = false;
-            else parsedValue = formula;
-            
-            const newCell: CellType = {
-                value: parsedValue,
-                formattedValue: parsedValue !== null ? String(parsedValue) : '',
-                formula: null,
-                style: {
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                    textColor: '#000000',
-                    bgColor: '#ffffff',
-                    align: 'left'
-                }
-            };
-            dispatch(updateCell({ row, col, value: newCell }));
-        } else {
-            const result = evaluateFormula(formula, getCellValue);
-            const newCell: CellType = {
-                value: result,
-                formattedValue: result !== null ? String(result) : '',
-                formula: formula,
-                style: {
-                    bold: false,
-                    italic: false,
-                    underline: false,
-                    textColor: '#000000',
-                    bgColor: '#ffffff',
-                    align: 'left'
-                }
-            };
-            dispatch(updateCell({ row, col, value: newCell }));
-        }
     };
 
     const startEdit = (row: number, col: number) => {
@@ -460,38 +491,6 @@ const Spreadsheet = ({}: SpreadsheetProps) => {
         }
         return headers;
     }, [visibleStartCol, visibleEndCol, columnWidths, columnOffsets]);
-
-    const handleCopy = () => {
-        if (selectedCell) {
-            const cell = cells[selectedCell.row]?.[selectedCell.col];
-            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
-            setClipboard({
-                value: value,
-                row: selectedCell.row,
-                col: selectedCell.col
-            });
-        }
-    };
-
-    const handleCut = () => {
-        if (selectedCell) {
-            const cell = cells[selectedCell.row]?.[selectedCell.col];
-            const value = cell?.formula || (cell?.value !== null ? String(cell.value) : '');
-            setClipboard({
-                value: value,
-                row: selectedCell.row,
-                col: selectedCell.col
-            });
-            // Очищаем ячейку
-            handleSetCellFormula(selectedCell.row, selectedCell.col, '');
-        }
-    };
-
-    const handlePaste = () => {
-        if (selectedCell && clipboard) {
-            handleSetCellFormula(selectedCell.row, selectedCell.col, clipboard.value);
-        }
-    };
 
     return (
         <div className="spreadsheet">
